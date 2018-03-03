@@ -7,7 +7,7 @@ var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/res
 
 // Authorization scopes required by the API; multiple scopes can be
 // included, separated by spaces.
-var SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly';
+var SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.file';
 
 interface Props {
 	onChange: Function;
@@ -66,5 +66,50 @@ export class GoogleApi {
 	signout() {
 		this.props.onChange('loading');
 		this.gapi.auth2.getAuthInstance().signOut();
+	}
+
+	/**
+	 * Insert new empty file.
+	 *
+	 * @param {Name} fileName File name to create
+	 * @param {Function} callback Function to call when the request is complete.
+	 */
+	insertFile(fileName, callback) {
+		const boundary = '-------314159265358979323846X' + (100000 + Math.floor(Math.random() * 100000));
+		const delimiter = "\r\n--" + boundary + "\r\n";
+		const close_delim = "\r\n--" + boundary + "--";
+
+		var contentType = 'application/octet-stream';
+		var metadata = {
+			'title': fileName,
+			'mimeType': contentType
+		};
+
+		var base64Data = btoa("");
+		var multipartRequestBody =
+			delimiter +
+			'Content-Type: application/json\r\n\r\n' +
+			JSON.stringify(metadata) +
+			delimiter +
+			'Content-Type: ' + contentType + '\r\n' +
+			'Content-Transfer-Encoding: base64\r\n' +
+			'\r\n' +
+			base64Data +
+			close_delim;
+
+		var request = this.gapi.client.request({
+			'path': '/upload/drive/v2/files',
+			'method': 'POST',
+			'params': {'uploadType': 'multipart'},
+			'headers': {
+				'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+			},
+			'body': multipartRequestBody});
+		if (!callback) {
+			callback = function(file) {
+			console.log(file)
+			};
+		}
+		request.execute(callback);
 	}
 }

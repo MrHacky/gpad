@@ -62,6 +62,7 @@ export class App extends React.Component<{}, State> {
 				update(this.state.filetext, this.state.selectedfile, (id) => {
 					return this.gapi.gapi.client.drive.files.get({
 						'fileId': id,
+						'alt': 'media',
 					}).then(qr => JSON.stringify(qr));
 				}, (filetext) => this.setState({ filetext: {...this.state.filetext, ...filetext }}), (e) => this.handleError(e));
 			}
@@ -82,7 +83,7 @@ export class App extends React.Component<{}, State> {
 			<div>
 				<span style={{ width: '400px', float: 'left' }}>
 					Files: {
-						this.state.files.data.map(x =>
+						this.state.files.data.filter(x => x.name.match(/\.txt$/)).map(x =>
 							<div key={x.id} onClick={() => this.onFileClick(x.id)}>{x.id == this.state.selectedfile ? '>' : ''}{x.name}</div>
 						)
 					}

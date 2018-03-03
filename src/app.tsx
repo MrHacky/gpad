@@ -74,8 +74,9 @@ export class App extends React.Component<{}, State> {
 
 	render() {
 		return <>
-			{this.state.gstate == "out" ? <button id="authorize-button" onClick={() => this.signin() }>Authorize</button>: null}
-			{this.state.gstate == "in"  ? <button id="signout-button"   onClick={() => this.signout()}>Sign Out</button> : null}
+			{this.state.gstate == "out" ? <button onClick={() => this.signin() }>Authorize</button>: null}
+			{this.state.gstate == "in"  ? <button onClick={() => this.signout()}>Sign Out</button> : null}
+			<button onClick={() => this.createFile()}>Create</button>
 			<button onClick={() => this.setState({ files: { ...this.state.files, didInvalidate: true }})}>Invalidate</button>
 			<div>State: {this.state.files.isFetching ? "Fetching " : ""}{this.state.files.didInvalidate ? "Invalidated " : ""}</div>
 			<div>
@@ -101,6 +102,12 @@ export class App extends React.Component<{}, State> {
 
 	signout() {
 		this.gapi.signout();
+	}
+
+	createFile() {
+		this.gapi.insertFile('test.txt', function(result) {
+			alert(JSON.stringify(result));
+		});
 	}
 
 	onStateChange(gstate) {

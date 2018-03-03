@@ -9,7 +9,7 @@ class asyncstate<T> {
 	id: any = null;
 }
 
-function update<T,I>(t: asyncstate<T>, newid: I, cb: (i: I) => Promise<T>, setState, setError) {
+async function update<T,I>(t: asyncstate<T>, newid: I, cb: (i: I) => Promise<T>, setState): Promise<void> {
 	if (t.isFetching) {
 		if (newid != t.id)
 			setState({ didInvalidate: true, id: newid });
@@ -18,9 +18,8 @@ function update<T,I>(t: asyncstate<T>, newid: I, cb: (i: I) => Promise<T>, setSt
 	if (!t.didInvalidate && newid == t.id)
 		return;
 	setState({ isFetching: true, didInvalidate: false, id: newid });
-	cb(newid).then((data) => {
-		setState({ isFetching: false, data });
-	}, setError);
+	let data = await cb(newid);
+	setState({ isFetching: false, data });
 }
 
 interface State {
@@ -51,21 +50,31 @@ export class App extends React.Component<{}, State> {
 	}
 
 	componentDidUpdate() {
-		if (this.state.gstate == "in") {
-			update(this.state.files, null, () => {
-				return this.gapi.gapi.client.drive.files.list({
-					'q': "'root' in parents",
-					'fields': "nextPageToken, files(id, name)"
-				}).then(q => q.result.files);
-			}, (files) => this.setState({ files: {...this.state.files, ...files }}), (e) => this.handleError(e));
-			if (this.state.selectedfile) {
-				update(this.state.filetext, this.state.selectedfile, (id) => {
-					return this.gapi.gapi.client.drive.files.get({
-						'fileId': id,
-						'alt': 'media',
-					}).then(qr => JSON.stringify(qr));
-				}, (filetext) => this.setState({ filetext: {...this.state.filetext, ...filetext }}), (e) => this.handleError(e));
+		this.checkUpdates();
+	}
+
+	async checkUpdates(): Promise<void> {
+		try {
+			if (this.state.gstate == "in") {
+				await update(this.state.files, null, async (): Promise<any[]> => {
+					let qr = await this.gapi.gapi.client.drive.files.list({
+						'q': "'root' in parents",
+						'fields': "nextPageToken, files(id, name)"
+					});
+					return qr.result.files;
+				}, (files) => this.setState({ files: {...this.state.files, ...files }}));
+				if (this.state.selectedfile) {
+					await update(this.state.filetext, this.state.selectedfile, async(id) => {
+						let qr = await this.gapi.gapi.client.drive.files.get({
+							'fileId': id,
+							'alt': 'media',
+						});
+						return JSON.stringify(qr);
+					}, (filetext) => this.setState({ filetext: {...this.state.filetext, ...filetext }}));
+				}
 			}
+		} catch (e) {
+			this.handleError(e);
 		}
 	}
 

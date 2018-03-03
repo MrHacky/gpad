@@ -9,7 +9,7 @@ class asyncstate<T> {
 	id: any = null;
 }
 
-function update<T,I>(t: asyncstate<T>, newid: I, cb: (i: I) => Promise<T>, setState) {
+function update<T,I>(t: asyncstate<T>, newid: I, cb: (i: I) => Promise<T>, setState, setError) {
 	if (t.isFetching) {
 		if (newid != t.id)
 			setState({ didInvalidate: true, id: newid });
@@ -20,7 +20,7 @@ function update<T,I>(t: asyncstate<T>, newid: I, cb: (i: I) => Promise<T>, setSt
 	setState({ isFetching: true, didInvalidate: false, id: newid });
 	cb(newid).then((data) => {
 		setState({ isFetching: false, data });
-	});
+	}, setError);
 }
 
 interface State {
@@ -57,15 +57,19 @@ export class App extends React.Component<{}, State> {
 					'q': "'root' in parents",
 					'fields': "nextPageToken, files(id, name)"
 				}).then(q => q.result.files);
-			}, (files) => this.setState({ files: {...this.state.files, ...files }}));
+			}, (files) => this.setState({ files: {...this.state.files, ...files }}), (e) => this.handleError(e));
 			if (this.state.selectedfile) {
 				update(this.state.filetext, this.state.selectedfile, (id) => {
 					return this.gapi.gapi.client.drive.files.get({
 						'fileId': id,
 					}).then(qr => JSON.stringify(qr));
-				}, (filetext) => this.setState({ filetext: {...this.state.filetext, ...filetext }}));
+				}, (filetext) => this.setState({ filetext: {...this.state.filetext, ...filetext }}), (e) => this.handleError(e));
 			}
 		}
+	}
+
+	handleError(e) {
+		alert(JSON.stringify(e));
 	}
 
 	render() {

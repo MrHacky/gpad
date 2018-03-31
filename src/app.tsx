@@ -59,9 +59,9 @@ export class App extends React.Component<{}, State> {
 				await update(this.state.files, null, async (): Promise<any[]> => {
 					let qr = await this.gapi.gapi.client.drive.files.list({
 						'q': "'root' in parents",
-						'fields': "nextPageToken, files(id, name)"
+						'fields': "nextPageToken, items(id, title)"
 					});
-					return qr.result.files;
+					return qr.result.items.map(x => ({...x, name: x.title}));
 				}, (files) => this.setState({ files: {...this.state.files, ...files }}));
 				if (this.state.selectedfile) {
 					await update(this.state.filetext, this.state.selectedfile, async(id) => {

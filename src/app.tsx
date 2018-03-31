@@ -65,11 +65,7 @@ export class App extends React.Component<{}, State> {
 				}, (files) => this.setState({ files: {...this.state.files, ...files }}));
 				if (this.state.selectedfile) {
 					await update(this.state.filetext, this.state.selectedfile, async(id) => {
-						let qr = await this.gapi.gapi.client.drive.files.get({
-							'fileId': id,
-							'alt': 'media',
-						});
-						return JSON.stringify(qr);
+						return await this.gapi.retrieveContent(id);
 					}, (filetext) => this.setState({ filetext: {...this.state.filetext, ...filetext }}));
 				}
 			}

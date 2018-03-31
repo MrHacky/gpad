@@ -29,6 +29,12 @@ export class GoogleApi {
 		document.head.appendChild(script);
 	}
 
+	makePromise<T>(request): Promise<T> {
+		return new Promise<T>((resolve) => {
+			request.execute(resolve);
+		});
+	}
+
 	scriptloaded(script) {
 		script.onload = function () { };
 		script.parentNode.removeChild(script);
@@ -111,5 +117,17 @@ export class GoogleApi {
 			};
 		}
 		request.execute(callback);
+	}
+
+	async retrieveFileInfo(fileId): Promise<any> {
+		return await this.gapi.client.drive.files.get({
+			'fileId': fileId,
+			'alt': 'media',
+			'fields': 'etag',
+		});
+	}
+
+	async retrieveContent(fileId): Promise<string> {
+		return JSON.stringify(await this.retrieveFileInfo(fileId));
 	}
 }

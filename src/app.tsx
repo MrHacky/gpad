@@ -27,6 +27,8 @@ interface State {
 	files: asyncstate<any[]>;
 	selectedfile: string;
 	filetext: asyncstate<File>;
+	localtext: File;
+	basetext: File;
 }
 
 
@@ -39,7 +41,10 @@ export class App extends React.Component<{}, State> {
 			gstate: 'x',
 			selectedfile: null,
 			files: new asyncstate<any[]>([]),
+			// TODO: figure out proper state (machine?) regarding local and remote states and their updates
 			filetext: new asyncstate<File>({ body: '', etag: '' }),
+			basetext: { body: '', etag: '' },
+			localtext: { body: '', etag: '' },
 		};
 	}
 
@@ -72,6 +77,26 @@ export class App extends React.Component<{}, State> {
 		} catch (e) {
 			this.handleError(e);
 		}
+
+		let remote = this.state.filetext.data;
+		let local = this.state.localtext;
+		let base = this.state.basetext;
+		if (remote.body != base.body) {
+			if (local.body == base.body) {
+				// no local changes, update to remote state
+				this.setState({
+					basetext: remote,
+					localtext: remote,
+				});
+			} else if (local.body == remote.body) {
+				// local state agrees with remote, update base
+				this.setState({
+					basetext: remote,
+				});
+			} else {
+				// conflict detected
+			}
+		}
 	}
 
 	handleError(e) {
@@ -93,13 +118,36 @@ export class App extends React.Component<{}, State> {
 						)
 					}
 				</span>
-				<span style={{ width: '300px', float: 'left' }}>{this.state.filetext.data.etag}:{this.state.filetext.data.body}</span>
+				<span style={{ width: '500px', float: 'left' }} title={'<' + this.state.filetext.data.body + '>'}>
+					etag={this.state.filetext.data.etag}<br/>
+					local-changes={(this.state.localtext.body != this.state.basetext.body) ? "yes" : "no"}<br/>
+					<button onClick={() => this.saveFile()}>Save</button>
+					<textarea onChange={(e) => this.onTextEdit(e)} style={{ width: '100%', height: "300px" }} value={this.state.localtext.body}/>
+				</span>
 			</div>
 		</>;
 	}
 
 	onFileClick(id) {
 		this.setState({ selectedfile: id });
+	}
+
+	onTextEdit(e) {
+		this.setState({ localtext: { ...this.state.localtext, body: e.target.value } });
+	}
+
+	async saveFile(): Promise<void> {
+		let file = this.state.selectedfile;
+		let etag = this.state.basetext.etag;
+		let text = this.state.localtext.body;
+		let save = await this.gapi.saveFile(file, text, etag);
+		if (save.success) {
+			this.setState({
+				filetext: {...this.state.filetext, data: { body: text, etag: save.etag }},
+				basetext: { body: text, etag: save.etag },
+			});
+		} else
+			this.handleError("Conflict on save");
 	}
 
 	signin() {

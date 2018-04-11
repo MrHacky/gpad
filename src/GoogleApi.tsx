@@ -13,6 +13,11 @@ interface Props {
 	onChange: Function;
 };
 
+export interface File {
+	body: string;
+	etag: string;
+}
+
 export class GoogleApi {
 	props: Props;
 	gapi: any;
@@ -119,15 +124,51 @@ export class GoogleApi {
 		request.execute(callback);
 	}
 
-	async retrieveFileInfo(fileId): Promise<any> {
-		return await this.gapi.client.drive.files.get({
-			'fileId': fileId,
-			'alt': 'media',
-			'fields': 'etag',
+	doSaveRequest(fileId, fileData, etag) {
+		var request = this.gapi.client.request({
+			'path': '/upload/drive/v2/files/' + fileId,
+			'method': 'PUT',
+			'params': {'uploadType': 'media', alt: 'json', fields: 'etag' },
+			'headers': {
+				'Content-Type': 'application/octet-stream',
+				'If-Match': etag,
+			},
+			'body': fileData,
 		});
+		return this.makePromise<any>(request);
 	}
 
-	async retrieveContent(fileId): Promise<string> {
-		return JSON.stringify(await this.retrieveFileInfo(fileId));
+	async retrieveContent(fileId): Promise<File> {
+		// alt=media request use different etag values than metadata requests, and uploads need the metadata etag value
+		// so we first do a metadata request to get the etag, and also the headRevisionId which should uniquely identify the content
+		// then we use the headRevisionId to retreive the actual content, and ignore the etag header in this request
+		let metadata = await this.gapi.client.drive.files.get({
+			'fileId': fileId,
+			'fields': 'etag,headRevisionId',
+		});
+		let content = await this.gapi.client.drive.files.get({
+			'fileId': fileId,
+			'revisionId': metadata.result.headRevisionId,
+			'alt': 'media',
+		});
+		return {
+			body: content.body,
+			etag: metadata.result.etag,
+		};
+	}
+
+	async saveFile(id, text, etag): Promise<any> {
+		let response = await this.doSaveRequest(id, text, etag);
+		if (response.error) {
+			if (response.error.code != 412)
+				throw response.error;
+			return {
+				success: false,
+			};
+		}
+		return {
+			success: true,
+			etag: response.etag,
+		};
 	}
 }

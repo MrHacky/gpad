@@ -79,13 +79,8 @@ export class GoogleApi {
 		this.gapi.auth2.getAuthInstance().signOut();
 	}
 
-	/**
-	 * Insert new empty file.
-	 *
-	 * @param {Name} fileName File name to create
-	 * @param {Function} callback Function to call when the request is complete.
-	 */
-	insertFile(fileName, callback) {
+	// TODO: properly detect case where the file already exists, probably in a function using this one
+	doCreateRequest(fileName) {
 		const boundary = '-------314159265358979323846X' + (100000 + Math.floor(Math.random() * 100000));
 		const delimiter = "\r\n--" + boundary + "\r\n";
 		const close_delim = "\r\n--" + boundary + "--";
@@ -115,13 +110,9 @@ export class GoogleApi {
 			'headers': {
 				'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
 			},
-			'body': multipartRequestBody});
-		if (!callback) {
-			callback = function(file) {
-			console.log(file)
-			};
-		}
-		request.execute(callback);
+			'body': multipartRequestBody,
+		});
+		return this.makePromise<any>(request);
 	}
 
 	doSaveRequest(fileId, fileData, etag) {

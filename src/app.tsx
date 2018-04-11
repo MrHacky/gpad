@@ -159,7 +159,7 @@ export class App extends React.Component<{}, State> {
 	}
 
 	createFile() {
-		this.gapi.insertFile('test.txt', function(result) {
+		this.gapi.doCreateRequest('test.txt').then(function(result) {
 			alert(JSON.stringify(result));
 		});
 	}

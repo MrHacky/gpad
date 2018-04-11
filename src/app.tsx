@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GoogleApi } from "./GoogleApi";
+import { GoogleApi, File } from "./GoogleApi";
 
 class asyncstate<T> {
 	constructor(public data: T) {};
@@ -26,7 +26,7 @@ interface State {
 	gstate: string;
 	files: asyncstate<any[]>;
 	selectedfile: string;
-	filetext: asyncstate<string>;
+	filetext: asyncstate<File>;
 }
 
 
@@ -39,7 +39,7 @@ export class App extends React.Component<{}, State> {
 			gstate: 'x',
 			selectedfile: null,
 			files: new asyncstate<any[]>([]),
-			filetext: new asyncstate<string>(""),
+			filetext: new asyncstate<File>({ body: '', etag: '' }),
 		};
 	}
 
@@ -93,7 +93,7 @@ export class App extends React.Component<{}, State> {
 						)
 					}
 				</span>
-				<span style={{ width: '300px', float: 'left' }}>{this.state.filetext.data}</span>
+				<span style={{ width: '300px', float: 'left' }}>{this.state.filetext.data.etag}:{this.state.filetext.data.body}</span>
 			</div>
 		</>;
 	}

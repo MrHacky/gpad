@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GoogleApi, File } from "./GoogleApi";
+import { GoogleApi, GoogleApiFunc, File } from "./GoogleApi";
 
 class asyncstate<T> {
 	constructor(public data: T) {};
@@ -46,12 +46,6 @@ export class App extends React.Component<{}, State> {
 			basetext: { body: '', etag: '' },
 			localtext: { body: '', etag: '' },
 		};
-	}
-
-	componentDidMount() {
-		this.gapi = new GoogleApi({
-			onChange: (state) => this.onStateChange(state),
-		});
 	}
 
 	componentDidUpdate() {
@@ -103,8 +97,15 @@ export class App extends React.Component<{}, State> {
 		alert(JSON.stringify(e));
 	}
 
+	handleGapiChange(g) {
+		this.gapi = g.api;
+		this.onStateChange(g.state);
+	}
+
 	render() {
 		return <>
+			<GoogleApiFunc onChange={(g) => this.handleGapiChange(g)}/>
+			<div>{this.state.gstate}</div>
 			{this.state.gstate == "out" ? <button onClick={() => this.signin() }>Authorize</button>: null}
 			{this.state.gstate == "in"  ? <button onClick={() => this.signout()}>Sign Out</button> : null}
 			<button onClick={() => this.createFile()}>Create</button>

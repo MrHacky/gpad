@@ -21,7 +21,7 @@ export interface File {
 	etag: string;
 }
 
-function useGoogleApi() {
+export function useGoogleApi() {
 	const [g, setG] = useState({ state: 'init' } as any);
 
 	function updateSigninStatus(isSignedIn) {
@@ -63,7 +63,7 @@ function useGoogleApi() {
 				updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
 			});
 		}
-	});
+	}, [ g ]);
 
 	return g;
 }

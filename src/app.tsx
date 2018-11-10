@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from 'react';
-import { GoogleApi, GoogleApiFunc, File } from "./GoogleApi";
+import { GoogleApi, useGoogleApi, File } from "./GoogleApi";
 
 interface State {
 	gstate: string;
@@ -123,59 +123,24 @@ function AsyncFileContent(props: { gapi: GoogleApi, selectedFileId }) {
 	</span>;
 }
 
-export class App extends React.Component<{}, State> {
-	gapi: GoogleApi;
+export function App() {
+	let gapi = useGoogleApi();
+	let [ selectedFileId, setSelectedFileId ] = useState(null);
 
-	constructor(props) {
-		super(props);
-		this.state = {
-			gstate: 'x',
-			selectedfile: null,
-		};
-	}
-
-	handleError(e) {
-		alert(JSON.stringify(e));
-	}
-
-	handleGapiChange(g) {
-		this.gapi = g.api;
-		this.onStateChange(g.state);
-	}
-
-	render() {
-		return <>
-			<GoogleApiFunc onChange={(g) => this.handleGapiChange(g)}/>
-			<div>{this.state.gstate}</div>
-			{this.state.gstate == "out" ? <button onClick={() => this.signin() }>Authorize</button>: null}
-			{this.state.gstate == "in"  ? <button onClick={() => this.signout()}>Sign Out</button> : null}
-			<button onClick={() => this.createFile()}>Create</button>
-			{this.state.gstate == "in" ? <div>
-				<AsyncFileList gapi={this.gapi} onFileClick={(id) => this.onFileClick(id)} selectedFileId={this.state.selectedfile}/>
-				<AsyncFileContent gapi={this.gapi} selectedFileId={this.state.selectedfile} key={this.state.selectedfile}/>
-			</div> : null }
-		</>;
-	}
-
-	onFileClick(id) {
-		this.setState({ selectedfile: id });
-	}
-
-	signin() {
-		this.gapi.signin();
-	}
-
-	signout() {
-		this.gapi.signout();
-	}
-
-	createFile() {
-		this.gapi.doCreateRequest('test.txt').then(function(result) {
+	function createFile() {
+		gapi.api.doCreateRequest('test.txt').then(function(result) {
 			alert(JSON.stringify(result));
 		});
 	}
 
-	onStateChange(gstate) {
-		this.setState({ gstate });
-	}
-}
+	return <>
+		<div>{gapi.state}</div>
+		{gapi.state == "out" ? <button onClick={() => gapi.api.signin() }>Authorize</button>: null}
+		{gapi.state == "in"  ? <button onClick={() => gapi.api.signout()}>Sign Out</button> : null}
+		<button onClick={() => createFile()}>Create</button>
+		{gapi.state == "in" ? <div>
+			<AsyncFileList gapi={gapi.api} onFileClick={(id) => setSelectedFileId(id)} selectedFileId={selectedFileId}/>
+			<AsyncFileContent gapi={gapi.api} selectedFileId={selectedFileId} key={selectedFileId}/>
+		</div> : null }
+	</>;
+};

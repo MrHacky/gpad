@@ -153,9 +153,9 @@ export class App extends React.Component<{}, State> {
 			{this.state.gstate == "out" ? <button onClick={() => this.signin() }>Authorize</button>: null}
 			{this.state.gstate == "in"  ? <button onClick={() => this.signout()}>Sign Out</button> : null}
 			<button onClick={() => this.createFile()}>Create</button>
-			<div>
+			{this.state.gstate == "in" ? <div>
 				<span style={{ width: '400px', float: 'left' }}>
-					{this.state.gstate == "in" ? <AsyncFileList gapi={this.gapi} onFileClick={(id) => this.onFileClick(id)} selectedFileId={this.state.selectedfile}/> : null}
+					<AsyncFileList gapi={this.gapi} onFileClick={(id) => this.onFileClick(id)} selectedFileId={this.state.selectedfile}/>
 				</span>
 				<span style={{ width: '500px', float: 'left' }} title={'<' + this.state.filetext.data.body + '>'}>
 					etag={this.state.filetext.data.etag}<br/>
@@ -163,7 +163,7 @@ export class App extends React.Component<{}, State> {
 					<button onClick={() => this.saveFile()}>Save</button>
 					<textarea onChange={(e) => this.onTextEdit(e)} style={{ width: '100%', height: "300px" }} value={this.state.localtext.body}/>
 				</span>
-			</div>
+			</div> : null }
 		</>;
 	}
 

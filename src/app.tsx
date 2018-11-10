@@ -37,6 +37,7 @@ function useAsyncState<T, I>(initial: T, id: I, cb: (i: I) => Promise<T>) {
 	let [ isInvalidated, setIsInvalidated ] = useState(false);
 	let [ currentId, setCurrentId ] = useState(undefined);
 	let [ currentData, setCurrentData ] = useState(initial);
+	let [ currentError, setCurrentError ] = useState(null);
 
 	if (isFetching) {
 		if (id !== currentId) {
@@ -48,13 +49,18 @@ function useAsyncState<T, I>(initial: T, id: I, cb: (i: I) => Promise<T>) {
 		setIsInvalidated(false);
 		setCurrentId(id);
 		cb(id).then(newdata => {
-			setIsFetching(false);
 			setCurrentData(newdata);
+			setCurrentError(null);
+			setIsFetching(false);
+		}, error => {
+			setCurrentError(error);
+			setIsFetching(false);
 		});
 	}
 
 	return {
 		data: currentData,
+		error: currentError,
 		isFetching,
 		isInvalidated,
 		doInvalidate: () => setIsInvalidated(true),
@@ -72,7 +78,7 @@ async function getFileList(gapi): Promise<any[]> {
 function AsyncFileList({ gapi, onFileClick, selectedFileId }) {
 	let { data, isFetching, isInvalidated, doInvalidate } = useAsyncState([], null, () => getFileList(gapi));
 
-	return <>
+	return <span style={{ width: '400px', float: 'left' }}>
 		<button onClick={doInvalidate}>Invalidate</button>
 		<div>State: {isFetching ? "Fetching " : ""}{isInvalidated ? "Invalidated " : ""}</div>
 		Files: {
@@ -80,7 +86,66 @@ function AsyncFileList({ gapi, onFileClick, selectedFileId }) {
 				<div key={x.id} onClick={() => onFileClick(x.id)}>{x.id == selectedFileId ? '>' : ''}{x.name}</div>
 			)
 		}
-	</>;
+	</span>;
+}
+
+function AsyncFileContent(props: { gapi: GoogleApi, selectedFileId }) {
+	let remote = useAsyncState(null, props.selectedFileId, async (id) => props.selectedFileId ? await props.gapi.retrieveContent(id) : null);
+	let [ base, setBase ] = useState({ body: '', etag: '' });
+	let [ localText , setLocalText ] = useState("");
+
+	if (remote.error)
+		alert(JSON.stringify(remote.error));
+	if (!remote.data)
+		return <>N/A</>;
+
+	function onTextEdit(e) {
+		setLocalText(e.target.value);
+	}
+
+	async function saveFile(): Promise<void> {
+		let file = props.selectedFileId;
+		let etag = base.etag;
+		let text = localText;
+		let save = await props.gapi.saveFile(file, text, etag);
+		if (save.success) {
+			// INVESTIGATE: swapping these lines seems to be cause weird stuff, while i really think the order here should not matter...
+			//              react hooks bug?
+			remote.doInvalidate();
+			setBase({ body: text, etag: save.etag });
+
+			/* Possible improvement: Update remote state directly here, as we 'know' what it is on successfull save
+			this.setState({
+				filetext: {...this.state.filetext, data: { body: text, etag: save.etag }},
+				basetext: { body: text, etag: save.etag },
+			});
+			*/
+		} else
+			alert("Conflict on save");
+	}
+
+	if (!remote.isFetching && !remote.isInvalidated && remote.data.body != base.body) {
+		if (localText == base.body) {
+			// no local changes, update to remote state
+			setBase(remote.data);
+			setLocalText(remote.data.body);
+		} else if (localText == remote.data.body) {
+			// local state agrees with remote, update base
+			setBase(remote.data);
+		} else {
+			// conflict detected
+			alert("conflict");
+		}
+	}
+
+	return <span style={{ width: '500px', float: 'left' }} title={'<' + remote.data.body + '>'}>
+		etag={remote.data.etag}<br/>
+		isFetching={remote.isFetching ? "yes" : "no"}<br/>
+		isInvalidated={remote.isInvalidated ? "yes" : "no"}<br/>
+		local-changes={(localText != base.body) ? "yes" : "no"}<br/>
+		<button onClick={() => saveFile()}>Save</button>
+		<textarea onChange={(e) => onTextEdit(e)} style={{ width: '100%', height: "300px" }} value={localText}/>
+	</span>;
 }
 
 export class App extends React.Component<{}, State> {
@@ -104,18 +169,6 @@ export class App extends React.Component<{}, State> {
 	}
 
 	async checkUpdates(): Promise<void> {
-		try {
-			if (this.state.gstate == "in") {
-				if (this.state.selectedfile) {
-					await update(this.state.filetext, this.state.selectedfile, async(id) => {
-						return await this.gapi.retrieveContent(id);
-					}, (filetext) => this.setState({ filetext: {...this.state.filetext, ...filetext }}));
-				}
-			}
-		} catch (e) {
-			this.handleError(e);
-		}
-
 		let remote = this.state.filetext.data;
 		let local = this.state.localtext;
 		let base = this.state.basetext;
@@ -154,39 +207,14 @@ export class App extends React.Component<{}, State> {
 			{this.state.gstate == "in"  ? <button onClick={() => this.signout()}>Sign Out</button> : null}
 			<button onClick={() => this.createFile()}>Create</button>
 			{this.state.gstate == "in" ? <div>
-				<span style={{ width: '400px', float: 'left' }}>
-					<AsyncFileList gapi={this.gapi} onFileClick={(id) => this.onFileClick(id)} selectedFileId={this.state.selectedfile}/>
-				</span>
-				<span style={{ width: '500px', float: 'left' }} title={'<' + this.state.filetext.data.body + '>'}>
-					etag={this.state.filetext.data.etag}<br/>
-					local-changes={(this.state.localtext.body != this.state.basetext.body) ? "yes" : "no"}<br/>
-					<button onClick={() => this.saveFile()}>Save</button>
-					<textarea onChange={(e) => this.onTextEdit(e)} style={{ width: '100%', height: "300px" }} value={this.state.localtext.body}/>
-				</span>
+				<AsyncFileList gapi={this.gapi} onFileClick={(id) => this.onFileClick(id)} selectedFileId={this.state.selectedfile}/>
+				<AsyncFileContent gapi={this.gapi} selectedFileId={this.state.selectedfile} key={this.state.selectedfile}/>
 			</div> : null }
 		</>;
 	}
 
 	onFileClick(id) {
 		this.setState({ selectedfile: id });
-	}
-
-	onTextEdit(e) {
-		this.setState({ localtext: { ...this.state.localtext, body: e.target.value } });
-	}
-
-	async saveFile(): Promise<void> {
-		let file = this.state.selectedfile;
-		let etag = this.state.basetext.etag;
-		let text = this.state.localtext.body;
-		let save = await this.gapi.saveFile(file, text, etag);
-		if (save.success) {
-			this.setState({
-				filetext: {...this.state.filetext, data: { body: text, etag: save.etag }},
-				basetext: { body: text, etag: save.etag },
-			});
-		} else
-			this.handleError("Conflict on save");
 	}
 
 	signin() {

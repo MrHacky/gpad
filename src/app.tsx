@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState, useEffect } from 'react';
 import { GoogleApi, GoogleApiFunc, File } from "./GoogleApi";
 
 class asyncstate<T> {
@@ -31,6 +32,56 @@ interface State {
 	basetext: File;
 }
 
+function useAsyncState<T, I>(initial: T, id: I, cb: (i: I) => Promise<T>) {
+	let [ isFetching, setIsFetching ] = useState(false);
+	let [ isInvalidated, setIsInvalidated ] = useState(false);
+	let [ currentId, setCurrentId ] = useState(undefined);
+	let [ currentData, setCurrentData ] = useState(initial);
+
+	if (isFetching) {
+		if (id !== currentId) {
+			setIsInvalidated(true);
+			setCurrentId(id);
+		}
+	} else if (isInvalidated || id !== currentId) {
+		setIsFetching(true);
+		setIsInvalidated(false);
+		setCurrentId(id);
+		cb(id).then(newdata => {
+			setIsFetching(false);
+			setCurrentData(newdata);
+		});
+	}
+
+	return {
+		data: currentData,
+		isFetching,
+		isInvalidated,
+		doInvalidate: () => setIsInvalidated(true),
+	}
+}
+
+async function getFileList(gapi): Promise<any[]> {
+	let qr = await gapi.gapi.client.drive.files.list({
+		'q': "'root' in parents",
+		'fields': "nextPageToken, items(id, title)"
+	});
+	return qr.result.items.map(x => ({...x, name: x.title}));
+}
+
+function AsyncFileList({ gapi, onFileClick, selectedFileId }) {
+	let { data, isFetching, isInvalidated, doInvalidate } = useAsyncState([], null, () => getFileList(gapi));
+
+	return <>
+		<button onClick={doInvalidate}>Invalidate</button>
+		<div>State: {isFetching ? "Fetching " : ""}{isInvalidated ? "Invalidated " : ""}</div>
+		Files: {
+			data.filter(x => x.name.match(/\.txt$/)).map(x =>
+				<div key={x.id} onClick={() => onFileClick(x.id)}>{x.id == selectedFileId ? '>' : ''}{x.name}</div>
+			)
+		}
+	</>;
+}
 
 export class App extends React.Component<{}, State> {
 	gapi: GoogleApi;
@@ -55,13 +106,6 @@ export class App extends React.Component<{}, State> {
 	async checkUpdates(): Promise<void> {
 		try {
 			if (this.state.gstate == "in") {
-				await update(this.state.files, null, async (): Promise<any[]> => {
-					let qr = await this.gapi.gapi.client.drive.files.list({
-						'q': "'root' in parents",
-						'fields': "nextPageToken, items(id, title)"
-					});
-					return qr.result.items.map(x => ({...x, name: x.title}));
-				}, (files) => this.setState({ files: {...this.state.files, ...files }}));
 				if (this.state.selectedfile) {
 					await update(this.state.filetext, this.state.selectedfile, async(id) => {
 						return await this.gapi.retrieveContent(id);
@@ -109,15 +153,9 @@ export class App extends React.Component<{}, State> {
 			{this.state.gstate == "out" ? <button onClick={() => this.signin() }>Authorize</button>: null}
 			{this.state.gstate == "in"  ? <button onClick={() => this.signout()}>Sign Out</button> : null}
 			<button onClick={() => this.createFile()}>Create</button>
-			<button onClick={() => this.setState({ files: { ...this.state.files, didInvalidate: true }})}>Invalidate</button>
-			<div>State: {this.state.files.isFetching ? "Fetching " : ""}{this.state.files.didInvalidate ? "Invalidated " : ""}</div>
 			<div>
 				<span style={{ width: '400px', float: 'left' }}>
-					Files: {
-						this.state.files.data.filter(x => x.name.match(/\.txt$/)).map(x =>
-							<div key={x.id} onClick={() => this.onFileClick(x.id)}>{x.id == this.state.selectedfile ? '>' : ''}{x.name}</div>
-						)
-					}
+					{this.state.gstate == "in" ? <AsyncFileList gapi={this.gapi} onFileClick={(id) => this.onFileClick(id)} selectedFileId={this.state.selectedfile}/> : null}
 				</span>
 				<span style={{ width: '500px', float: 'left' }} title={'<' + this.state.filetext.data.body + '>'}>
 					etag={this.state.filetext.data.etag}<br/>

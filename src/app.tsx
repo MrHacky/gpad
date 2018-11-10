@@ -2,34 +2,9 @@ import * as React from "react";
 import { useState, useEffect } from 'react';
 import { GoogleApi, GoogleApiFunc, File } from "./GoogleApi";
 
-class asyncstate<T> {
-	constructor(public data: T) {};
-	isFetching: boolean = false;
-	didInvalidate: boolean = true;
-	lastError: any = null;
-	id: any = null;
-}
-
-async function update<T,I>(t: asyncstate<T>, newid: I, cb: (i: I) => Promise<T>, setState): Promise<void> {
-	if (t.isFetching) {
-		if (newid != t.id)
-			setState({ didInvalidate: true, id: newid });
-		return;
-	}
-	if (!t.didInvalidate && newid == t.id)
-		return;
-	setState({ isFetching: true, didInvalidate: false, id: newid });
-	let data = await cb(newid);
-	setState({ isFetching: false, data });
-}
-
 interface State {
 	gstate: string;
-	files: asyncstate<any[]>;
 	selectedfile: string;
-	filetext: asyncstate<File>;
-	localtext: File;
-	basetext: File;
 }
 
 function useAsyncState<T, I>(initial: T, id: I, cb: (i: I) => Promise<T>) {
@@ -156,38 +131,7 @@ export class App extends React.Component<{}, State> {
 		this.state = {
 			gstate: 'x',
 			selectedfile: null,
-			files: new asyncstate<any[]>([]),
-			// TODO: figure out proper state (machine?) regarding local and remote states and their updates
-			filetext: new asyncstate<File>({ body: '', etag: '' }),
-			basetext: { body: '', etag: '' },
-			localtext: { body: '', etag: '' },
 		};
-	}
-
-	componentDidUpdate() {
-		this.checkUpdates();
-	}
-
-	async checkUpdates(): Promise<void> {
-		let remote = this.state.filetext.data;
-		let local = this.state.localtext;
-		let base = this.state.basetext;
-		if (remote.body != base.body) {
-			if (local.body == base.body) {
-				// no local changes, update to remote state
-				this.setState({
-					basetext: remote,
-					localtext: remote,
-				});
-			} else if (local.body == remote.body) {
-				// local state agrees with remote, update base
-				this.setState({
-					basetext: remote,
-				});
-			} else {
-				// conflict detected
-			}
-		}
 	}
 
 	handleError(e) {

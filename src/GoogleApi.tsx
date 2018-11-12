@@ -34,12 +34,6 @@ export function useGoogleApi() {
 	return o;
 }
 
-export function GoogleApiFunc(props: { onChange: any }) {
-	let g = useGoogleApi();
-	useEffect(() => props.onChange(g), [g]);
-	return <div/>;
-}
-
 export class GoogleApi {
 	gapi: any;
 	state: string;

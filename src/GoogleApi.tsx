@@ -22,10 +22,13 @@ export interface File {
 }
 
 export function useGoogleApi() {
-	const [g, setG] = useState({ state: 'init' } as any);
+	const [ o, setO ] = useState(() => new GoogleApi(null));
+	const [ g, setG ] = useState({ state: 'init' } as any);
+
+	o.state = g.state;
 
 	function updateSigninStatus(isSignedIn) {
-		setG({...g, state: isSignedIn ? 'in' : 'out' });
+		setG({ state: isSignedIn ? 'in' : 'out' });
 	};
 
 	useEffect(() => {
@@ -43,13 +46,13 @@ export function useGoogleApi() {
 			g.script.onload = function () { };
 			g.script.parentNode.removeChild(g.script);
 			let w = window as any;
-			let ngapi = new GoogleApi(w.gapi);
+			o.gapi = w.gapi;
 			//w.gapi = undefined;
-			ngapi.gapi.load('client:auth2', () => setG({ state: 'authenticating', api: ngapi }));
+			o.gapi.load('client:auth2', () => setG({ state: 'authenticating' }));
 		}
 		if (g.state == 'authenticating') {
-			let gapi = g.api.gapi;
-			setG({ state: 'waiting-3', api: g.api });
+			let gapi = o.gapi;
+			setG({ state: 'waiting-3' });
 			gapi.client.init({
 				apiKey: API_KEY,
 				clientId: CLIENT_ID,
@@ -63,9 +66,9 @@ export function useGoogleApi() {
 				updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
 			});
 		}
-	}, [ g ]);
+	}, [ g, o ]);
 
-	return g;
+	return o;
 }
 
 export function GoogleApiFunc(props: { onChange: any }) {
@@ -76,6 +79,7 @@ export function GoogleApiFunc(props: { onChange: any }) {
 
 export class GoogleApi {
 	gapi: any;
+	state: string;
 
 	constructor(gapi: any) {
 		this.gapi = gapi;
@@ -180,4 +184,13 @@ export class GoogleApi {
 			etag: response.etag,
 		};
 	}
+
+	async getFileList(): Promise<any[]> {
+		let qr = await this.gapi.client.drive.files.list({
+			'q': "'root' in parents",
+			'fields': "nextPageToken, items(id, title)"
+		});
+		return qr.result.items.map(x => ({...x, name: x.title}));
+	}
+
 }

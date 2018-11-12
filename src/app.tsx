@@ -42,16 +42,8 @@ function useAsyncState<T, I>(initial: T, id: I, cb: (i: I) => Promise<T>) {
 	}
 }
 
-async function getFileList(gapi): Promise<any[]> {
-	let qr = await gapi.gapi.client.drive.files.list({
-		'q': "'root' in parents",
-		'fields': "nextPageToken, items(id, title)"
-	});
-	return qr.result.items.map(x => ({...x, name: x.title}));
-}
-
 function AsyncFileList({ gapi, onFileClick, selectedFileId }) {
-	let { data, isFetching, isInvalidated, doInvalidate } = useAsyncState([], null, () => getFileList(gapi));
+	let { data, isFetching, isInvalidated, doInvalidate } = useAsyncState([], null, () => gapi.getFileList());
 
 	return <span style={{ width: '400px', float: 'left' }}>
 		<button onClick={doInvalidate}>Invalidate</button>
@@ -128,19 +120,19 @@ export function App() {
 	let [ selectedFileId, setSelectedFileId ] = useState(null);
 
 	function createFile() {
-		gapi.api.doCreateRequest('test.txt').then(function(result) {
+		gapi.doCreateRequest('test.txt').then(function(result) {
 			alert(JSON.stringify(result));
 		});
 	}
 
 	return <>
 		<div>{gapi.state}</div>
-		{gapi.state == "out" ? <button onClick={() => gapi.api.signin() }>Authorize</button>: null}
-		{gapi.state == "in"  ? <button onClick={() => gapi.api.signout()}>Sign Out</button> : null}
+		{gapi.state == "out" ? <button onClick={() => gapi.signin() }>Authorize</button>: null}
+		{gapi.state == "in"  ? <button onClick={() => gapi.signout()}>Sign Out</button> : null}
 		<button onClick={() => createFile()}>Create</button>
 		{gapi.state == "in" ? <div>
-			<AsyncFileList gapi={gapi.api} onFileClick={(id) => setSelectedFileId(id)} selectedFileId={selectedFileId}/>
-			<AsyncFileContent gapi={gapi.api} selectedFileId={selectedFileId} key={selectedFileId}/>
+			<AsyncFileList gapi={gapi} onFileClick={(id) => setSelectedFileId(id)} selectedFileId={selectedFileId}/>
+			<AsyncFileContent gapi={gapi} selectedFileId={selectedFileId} key={selectedFileId}/>
 		</div> : null }
 	</>;
 };

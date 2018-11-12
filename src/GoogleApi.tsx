@@ -23,50 +23,13 @@ export interface File {
 
 export function useGoogleApi() {
 	const [ o, setO ] = useState(() => new GoogleApi(null));
-	const [ g, setG ] = useState({ state: 'init' } as any);
+	const [ state, setState ] = useState('init');
 
-	o.state = g.state;
-
-	function updateSigninStatus(isSignedIn) {
-		setG({ state: isSignedIn ? 'in' : 'out' });
-	};
+	o.state = state;
 
 	useEffect(() => {
-		if (g.state == 'init') {
-			setG({ state: 'waiting-1' });
-			let script = document.createElement('script');
-			script.async = true;
-			script.defer = true;
-			script.src = "https://apis.google.com/js/api.js";
-			script.onload = () => setG({ state: 'loading', script: script });
-			document.head.appendChild(script);
-		}
-		if (g.state == 'loading') {
-			setG({ state: 'waiting-2' });
-			g.script.onload = function () { };
-			g.script.parentNode.removeChild(g.script);
-			let w = window as any;
-			o.gapi = w.gapi;
-			//w.gapi = undefined;
-			o.gapi.load('client:auth2', () => setG({ state: 'authenticating' }));
-		}
-		if (g.state == 'authenticating') {
-			let gapi = o.gapi;
-			setG({ state: 'waiting-3' });
-			gapi.client.init({
-				apiKey: API_KEY,
-				clientId: CLIENT_ID,
-				discoveryDocs: DISCOVERY_DOCS,
-				scope: SCOPES
-			}).then(() => {
-				// Listen for sign-in state changes.
-				gapi.auth2.getAuthInstance().isSignedIn.listen((s) => updateSigninStatus(s));
-
-				// Handle the initial sign-in state.
-				updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-			});
-		}
-	}, [ g, o ]);
+		o.initialize(setState);
+	}, []);
 
 	return o;
 }
@@ -83,6 +46,43 @@ export class GoogleApi {
 
 	constructor(gapi: any) {
 		this.gapi = gapi;
+	}
+
+	async initialize(setState: (string) => void): Promise<void> {
+		setState('fetching');
+		{
+			let script = document.createElement('script');
+			await new Promise<void>(resolve => {
+				script.async = true;
+				script.defer = true;
+				script.src = "https://apis.google.com/js/api.js";
+				script.onload = resolve as any;
+				document.head.appendChild(script);
+			});
+			setState('loading');
+			script.onload = function () { };
+			script.parentNode.removeChild(script);
+			let w = window as any;
+			this.gapi = w.gapi;
+		}
+		await new Promise<void>(resolve => this.gapi.load('client:auth2', resolve));
+		setState('authenticating');
+		await this.gapi.client.init({
+			apiKey: API_KEY,
+			clientId: CLIENT_ID,
+			discoveryDocs: DISCOVERY_DOCS,
+			scope: SCOPES
+		});
+
+		function updateSigninStatus(isSignedIn) {
+			setState(isSignedIn ? 'in' : 'out');
+		};
+
+		// Subscribe to state changes
+		this.gapi.auth2.getAuthInstance().isSignedIn.listen((s) => updateSigninStatus(s));
+
+		// Handle the initial sign-in state.
+		updateSigninStatus(this.gapi.auth2.getAuthInstance().isSignedIn.get());
 	}
 
 	makePromise<T>(request): Promise<T> {

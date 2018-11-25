@@ -2,6 +2,8 @@ import * as React from "react";
 import { useState, useEffect } from 'react';
 import { GoogleApi, useGoogleApi, File } from "./GoogleApi";
 
+import { unstable_batchedUpdates as batch }  from "react-dom";
+
 interface State {
 	gstate: string;
 	selectedfile: string;
@@ -24,9 +26,11 @@ function useAsyncState<T, I>(initial: T, id: I, cb: (i: I) => Promise<T>) {
 		setIsInvalidated(false);
 		setCurrentId(id);
 		cb(id).then(newdata => {
-			setCurrentData(newdata);
-			setCurrentError(null);
-			setIsFetching(false);
+			batch(() => {
+				setCurrentData(newdata);
+				setCurrentError(null);
+				setIsFetching(false);
+			});
 		}, error => {
 			setCurrentError(error);
 			setIsFetching(false);
@@ -77,9 +81,11 @@ function AsyncFileContent(props: { gapi: GoogleApi, selectedFileId }) {
 		let save = await props.gapi.saveFile(file, text, etag);
 		if (save.success) {
 			// INVESTIGATE: swapping these lines seems to be cause weird stuff, while i really think the order here should not matter...
-			//              react hooks bug?
-			remote.doInvalidate();
-			setBase({ body: text, etag: save.etag });
+			//              react hooks bug? workaround with batch for now...
+			batch(() => {
+				remote.doInvalidate();
+				setBase({ body: text, etag: save.etag });
+			});
 
 			/* Possible improvement: Update remote state directly here, as we 'know' what it is on successfull save
 			this.setState({

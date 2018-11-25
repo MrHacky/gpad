@@ -96,7 +96,7 @@ export class GoogleApi {
 	}
 
 	// TODO: properly detect case where the file already exists, probably in a function using this one
-	doCreateRequest(fileName) {
+	createFile(fileName, body) {
 		const boundary = '-------314159265358979323846X' + (100000 + Math.floor(Math.random() * 100000));
 		const delimiter = "\r\n--" + boundary + "\r\n";
 		const close_delim = "\r\n--" + boundary + "--";
@@ -107,7 +107,7 @@ export class GoogleApi {
 			'mimeType': contentType
 		};
 
-		var base64Data = btoa("");
+		var base64Data = btoa(body);
 		var multipartRequestBody =
 			delimiter +
 			'Content-Type: application/json\r\n\r\n' +
@@ -186,5 +186,4 @@ export class GoogleApi {
 		});
 		return qr.result.items.map(x => ({...x, name: x.title}));
 	}
-
 }

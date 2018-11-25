@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { GoogleApi, useGoogleApi, File } from "./GoogleApi";
 
 import { unstable_batchedUpdates as batch }  from "react-dom";
@@ -7,6 +7,17 @@ import { unstable_batchedUpdates as batch }  from "react-dom";
 interface State {
 	gstate: string;
 	selectedfile: string;
+}
+
+interface StorageApi {
+	state: string;
+
+	signin(): void;
+	signout(): void;
+	retrieveContent(id: string): Promise<{ body: string, etag: string }>;
+	saveFile(id: string, text: string, etag: string): Promise<{ success: boolean, etag: string }>;
+	getFileList(): Promise<{ id: string, name: string}[]>;
+	createFile(name: string, body: string): Promise<any>;
 }
 
 function useAsyncState<T, I>(initial: T, id: I, cb: (i: I) => Promise<T>) {
@@ -60,7 +71,7 @@ function AsyncFileList({ gapi, onFileClick, selectedFileId }) {
 	</span>;
 }
 
-function AsyncFileContent(props: { gapi: GoogleApi, selectedFileId }) {
+function AsyncFileContent(props: { gapi: StorageApi, selectedFileId }) {
 	let remote = useAsyncState(null, props.selectedFileId, async (id) => props.selectedFileId ? await props.gapi.retrieveContent(id) : null);
 	let [ base, setBase ] = useState({ body: '', etag: '' });
 	let [ localText , setLocalText ] = useState("");
@@ -122,11 +133,11 @@ function AsyncFileContent(props: { gapi: GoogleApi, selectedFileId }) {
 }
 
 export function App() {
-	let gapi = useGoogleApi();
+	let gapi: StorageApi = useFakeApi();//useGoogleApi();
 	let [ selectedFileId, setSelectedFileId ] = useState(null);
 
 	function createFile() {
-		gapi.doCreateRequest('test.txt').then(function(result) {
+		gapi.createFile('test.txt', '').then(function(result) {
 			alert(JSON.stringify(result));
 		});
 	}
@@ -142,3 +153,90 @@ export function App() {
 		</div> : null }
 	</>;
 };
+
+interface FileInfo {
+	body: string;
+	version: number;
+	name: string;
+}
+
+interface FileInfoMap {
+	[key: string]: FileInfo;
+}
+
+function useFakeApi(): StorageApi {
+	const [ state, setState ] = useState('in');
+	// const [ getFiles, updateFiles ] = ...; see end of useLocalStorage
+	const files = useLocalStorage('gpad-files', {} as FileInfoMap);
+	const id = useLocalStorage('gpad-file-id', 1);
+
+	function signin() {
+		setState('in');
+	};
+	function signout() {
+		setState('out');
+	};
+	async function retrieveContent(id: string): Promise<File> {
+		let { body, version } = files.get()[id];
+		return { body, etag: "" + version };
+	};
+	async function saveFile(id, text, etag): Promise<any> {
+		let ret = { success: false, etag: null };
+		files.update(prev => {
+			const fi = prev[id];
+			if (etag == fi.version) {
+				const nfi = { ...fi, body: text, version: fi.version + 1 };
+				ret.success = true;
+				ret.etag = "" + nfi.version;
+				return { ...prev, [id]: nfi };
+			} else
+				return prev;
+		});
+		return ret;
+	};
+	async function getFileList() {
+		let fi = files.get();
+		let ret = [];
+		for (let id in fi) {
+			ret.push({ id, name: fi[id].name });
+		}
+		return ret;
+	};
+	async function createFile(name: string, body: string) {
+		let curid: string;
+		id.update(prev => {
+			curid = "" + prev;
+			return ++prev;
+		});
+		files.update(prev => ({ ...prev, [curid]: { body, version: 1, name } }));
+		return {};
+	};
+	return {
+		state,
+		signin         ,
+		signout        ,
+		retrieveContent,
+		saveFile       ,
+		getFileList    ,
+		createFile     ,
+	};
+}
+
+function useLocalStorage<T>(key: string, initialValue: T) {
+	// The initialValue arg is only used if there is nothing in localStorage ...
+	// ... otherwise we use the value in localStorage so state persist through a page refresh.
+	const getValue: () => T = () => {
+		let stored = window.localStorage.getItem(key);
+		return stored ? JSON.parse(stored) : initialValue;
+	};
+
+	const updateValue = (updater: (x: T) => T) => {
+		const prev = getValue();
+		const next = updater(prev);
+		window.localStorage.setItem(key, JSON.stringify(next));
+	};
+
+	return { get: getValue, update: updateValue };
+
+	//return [ getValue, updateValue ]; // This is more hook-like, but typescript can't figure out the typing
+}

@@ -166,9 +166,8 @@ interface FileInfoMap {
 
 function useFakeApi(): StorageApi {
 	const [ state, setState ] = useState('in');
-	// const [ getFiles, updateFiles ] = ...; see end of useLocalStorage
-	const files = useLocalStorage('gpad-files', {} as FileInfoMap);
-	const id = useLocalStorage('gpad-file-id', 1);
+	const [ getFiles, updateFiles ] = useLocalStorage('gpad-files', {} as FileInfoMap);
+	const [ getId, updateId ] = useLocalStorage('gpad-file-id', 1);
 
 	function signin() {
 		setState('in');
@@ -177,12 +176,12 @@ function useFakeApi(): StorageApi {
 		setState('out');
 	};
 	async function retrieveContent(id: string): Promise<File> {
-		let { body, version } = files.get()[id];
+		let { body, version } = getFiles()[id];
 		return { body, etag: "" + version };
 	};
 	async function saveFile(id, text, etag): Promise<any> {
 		let ret = { success: false, etag: null };
-		files.update(prev => {
+		updateFiles(prev => {
 			const fi = prev[id];
 			if (etag == fi.version) {
 				const nfi = { ...fi, body: text, version: fi.version + 1 };
@@ -195,7 +194,7 @@ function useFakeApi(): StorageApi {
 		return ret;
 	};
 	async function getFileList() {
-		let fi = files.get();
+		let fi = getFiles();
 		let ret = [];
 		for (let id in fi) {
 			ret.push({ id, name: fi[id].name });
@@ -204,11 +203,11 @@ function useFakeApi(): StorageApi {
 	};
 	async function createFile(name: string, body: string) {
 		let curid: string;
-		id.update(prev => {
+		updateId(prev => {
 			curid = "" + prev;
 			return ++prev;
 		});
-		files.update(prev => ({ ...prev, [curid]: { body, version: 1, name } }));
+		updateFiles(prev => ({ ...prev, [curid]: { body, version: 1, name } }));
 		return {};
 	};
 	return {
@@ -222,12 +221,12 @@ function useFakeApi(): StorageApi {
 	};
 }
 
-function useLocalStorage<T>(key: string, initialValue: T) {
+function useLocalStorage<T>(key: string, initialValue: T): [() => T, (u: (x: T) => T) => void] {
 	// The initialValue arg is only used if there is nothing in localStorage ...
 	// ... otherwise we use the value in localStorage so state persist through a page refresh.
 	const getValue: () => T = () => {
 		let stored = window.localStorage.getItem(key);
-		return stored ? JSON.parse(stored) : initialValue;
+		return stored ? JSON.parse(stored) as T: initialValue;
 	};
 
 	const updateValue = (updater: (x: T) => T) => {
@@ -236,7 +235,5 @@ function useLocalStorage<T>(key: string, initialValue: T) {
 		window.localStorage.setItem(key, JSON.stringify(next));
 	};
 
-	return { get: getValue, update: updateValue };
-
-	//return [ getValue, updateValue ]; // This is more hook-like, but typescript can't figure out the typing
+	return [ getValue, updateValue ];
 }

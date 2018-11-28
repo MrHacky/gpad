@@ -3,6 +3,6 @@ import * as ReactDOM from "react-dom";
 
 import { App } from "./app";
 
-let div = document.createElement('div');
+let div = document.createElement("div");
 document.body.appendChild(div);
-ReactDOM.render(<App/>, div);
+ReactDOM.render(<App />, div);

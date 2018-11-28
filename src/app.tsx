@@ -224,12 +224,12 @@ function useFakeApi(): StorageApi {
 function useLocalStorage<T>(key: string, initialValue: T): [() => T, (u: (x: T) => T) => void] {
 	// The initialValue arg is only used if there is nothing in localStorage ...
 	// ... otherwise we use the value in localStorage so state persist through a page refresh.
-	const getValue: () => T = () => {
+	function getValue(): T {
 		let stored = window.localStorage.getItem(key);
 		return stored ? JSON.parse(stored) as T: initialValue;
 	};
 
-	const updateValue = (updater: (x: T) => T) => {
+	function updateValue(updater: (x: T) => T) {
 		const prev = getValue();
 		const next = updater(prev);
 		window.localStorage.setItem(key, JSON.stringify(next));

@@ -20,11 +20,6 @@ interface Props {
   onChange: Function;
 }
 
-export interface File {
-  body: string;
-  etag: string;
-}
-
 export function useGoogleApi() {
   const [o, setO] = useState(() => new GoogleApi(null));
   const [state, setState] = useState("init");
@@ -155,7 +150,7 @@ export class GoogleApi {
     return this.makePromise<any>(request);
   }
 
-  async retrieveContent(fileId): Promise<File> {
+  async retrieveContent(fileId): Promise<RemoteFile> {
     // alt=media request use different etag values than metadata requests, and uploads need the metadata etag value
     // so we first do a metadata request to get the etag, and also the headRevisionId which should uniquely identify the content
     // then we use the headRevisionId to retreive the actual content, and ignore the etag header in this request

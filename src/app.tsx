@@ -5,6 +5,7 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useFakeApi } from "./hooks/useFakeApi";
 import AsyncFileContent from "./components/AsyncFileContent";
 import AsyncFileList from "./components/AsyncFileList";
+import { StorageApi } from "./storageApi";
 
 export function App() {
   let gapi: StorageApi = useFakeApi(); //useGoogleApi();

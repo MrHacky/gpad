@@ -3,7 +3,7 @@ import { useAsyncState } from "../hooks/useAsyncState";
 
 export default function AsyncFileList({ gapi, onFileClick, selectedFileId }) {
   let { data, isFetching, isInvalidated, doInvalidate } = useAsyncState(
-    [],
+    [] as { id: string; name: string }[],
     null,
     () => gapi.getFileList()
   );
@@ -15,11 +15,11 @@ export default function AsyncFileList({ gapi, onFileClick, selectedFileId }) {
         State: {isFetching ? "Fetching " : ""}
         {isInvalidated ? "Invalidated " : ""}
       </div>
-      Files:{" "}
-      {data.filter(x => x.name.match(/\.txt$/)).map(x => (
-        <div key={x.id} onClick={() => onFileClick(x.id)}>
-          {x.id == selectedFileId ? ">" : ""}
-          {x.name}
+      <h4>Files:</h4>
+      {data.filter(f => f.name.match(/\.txt$/)).map(({ id, name }) => (
+        <div key={id} onClick={() => onFileClick(id)}>
+          {id == selectedFileId ? ">" : ""}
+          {name} ({id})
         </div>
       ))}
     </span>

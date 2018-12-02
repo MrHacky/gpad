@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import * as React from "react";
+import { File } from "../storageApi";
 
 // Client ID and API key from the Developer Console
 var CLIENT_ID =
@@ -150,7 +150,7 @@ export class GoogleApi {
     return this.makePromise<any>(request);
   }
 
-  async retrieveContent(fileId): Promise<RemoteFile> {
+  async retrieveContent(fileId): Promise<File> {
     // alt=media request use different etag values than metadata requests, and uploads need the metadata etag value
     // so we first do a metadata request to get the etag, and also the headRevisionId which should uniquely identify the content
     // then we use the headRevisionId to retreive the actual content, and ignore the etag header in this request

@@ -2,6 +2,7 @@ import * as React from "react";
 import { useAsyncState } from "../hooks/useAsyncState";
 import { useState } from "react";
 import { unstable_batchedUpdates as batch } from "react-dom";
+import { StorageApi } from "../storageApi";
 
 export default function AsyncFileContent(props: {
   gapi: StorageApi;
@@ -19,21 +20,18 @@ export default function AsyncFileContent(props: {
   if (remote.error) alert(JSON.stringify(remote.error));
   if (!remote.data) return <>N/A</>;
 
-  function onTextEdit(e) {
-    setLocalText(e.target.value);
-  }
-
   async function saveFile(): Promise<void> {
     let file = props.selectedFileId;
     let etag = base.etag;
     let text = localText;
-    let save = await props.gapi.saveFile(file, text, etag);
-    if (save.success) {
+    let result = await props.gapi.saveFile(file, text, etag);
+    console.log(result);
+    if (result.success) {
       // INVESTIGATE: swapping these lines seems to be cause weird stuff, while i really think the order here should not matter...
       //              react hooks bug? workaround with batch for now...
       batch(() => {
         remote.doInvalidate();
-        setBase({ body: text, etag: save.etag });
+        setBase({ body: text, etag: result.etag });
       });
 
       /* Possible improvement: Update remote state directly here, as we 'know' what it is on successfull save
@@ -42,7 +40,9 @@ export default function AsyncFileContent(props: {
                   basetext: { body: text, etag: save.etag },
               });
               */
-    } else alert("Conflict on save");
+    } else {
+      console.error("Conflict on save");
+    }
   }
 
   if (
@@ -82,7 +82,7 @@ export default function AsyncFileContent(props: {
       <br />
       <button onClick={() => saveFile()}>Save</button>
       <textarea
-        onChange={e => onTextEdit(e)}
+        onChange={e => setLocalText(e.target.value)}
         style={{ width: "100%", height: "300px" }}
         value={localText}
       />

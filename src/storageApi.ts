@@ -1,4 +1,4 @@
-interface StorageApi {
+export interface StorageApi {
   state: string;
 
   signin(): void;
@@ -13,17 +13,17 @@ interface StorageApi {
   createFile(name: string, body: string): Promise<any>;
 }
 
-interface RemoteFile {
+export interface File {
   body: string;
   etag: string;
 }
 
-interface FileInfo {
+export interface FileInfo {
   body: string;
   version: number;
   name: string;
 }
 
-interface FileInfoMap {
+export interface FileInfoMap {
   [key: string]: FileInfo;
 }

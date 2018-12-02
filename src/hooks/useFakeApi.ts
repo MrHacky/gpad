@@ -1,3 +1,4 @@
+import { StorageApi, FileInfoMap, File } from "./../storageApi";
 import { useState } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 
@@ -12,18 +13,23 @@ export function useFakeApi(): StorageApi {
   function signout() {
     setState("out");
   }
-  async function retrieveContent(id: string): Promise<RemoteFile> {
+  async function retrieveContent(id: string): Promise<File> {
     let { body, version } = files[id];
-    return { body, etag: "" + version };
+    return { body, etag: version.toString() };
   }
-  async function saveFile(id, text, etag): Promise<any> {
+  async function saveFile(
+    id: string,
+    text: string,
+    etag: string
+  ): Promise<any> {
     let ret = { success: false, etag: null };
     updateFiles(prev => {
       const fi = prev[id];
-      if (etag == fi.version) {
+      console.log(prev, etag, fi);
+      if (etag == fi.version.toString()) {
         const nfi = { ...fi, body: text, version: fi.version + 1 };
         ret.success = true;
-        ret.etag = "" + nfi.version;
+        ret.etag = nfi.version.toString();
         return { ...prev, [id]: nfi };
       } else return prev;
     });

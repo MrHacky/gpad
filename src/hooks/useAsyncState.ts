@@ -4,7 +4,7 @@ import { useState } from "react";
 export function useAsyncState<DataFormat, IdFormat>(
   initial: DataFormat,
   id: IdFormat,
-  cb: (i: IdFormat) => Promise<DataFormat>
+  fetchDataFrom: (i: IdFormat) => Promise<DataFormat>
 ) {
   let [isFetching, setIsFetching] = useState(false);
   let [isInvalidated, setIsInvalidated] = useState(false);
@@ -21,8 +21,9 @@ export function useAsyncState<DataFormat, IdFormat>(
     setIsFetching(true);
     setIsInvalidated(false);
     setCurrentId(id);
-    cb(id).then(
+    fetchDataFrom(id).then(
       newdata => {
+        console.log("fetched new data for: ", id, newdata);
         batch(() => {
           setCurrentData(newdata);
           setCurrentError(null);

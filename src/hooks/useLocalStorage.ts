@@ -10,6 +10,7 @@ export function useLocalStorage<T>(
   }
 
   function updateValue(updater: (x: T) => T) {
+    // TODO Why do we use a function here? We don't need a prev value?, that's getValue() already.
     const prev = getValue();
     const next = updater(prev);
     window.localStorage.setItem(key, JSON.stringify(next));

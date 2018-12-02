@@ -7,6 +7,7 @@ export function useFakeApi(): StorageApi {
   const [files, updateFiles] = useLocalStorage("gpad-files", {} as FileInfoMap);
   const [id, updateId] = useLocalStorage("gpad-file-id", 1);
 
+  console.log(files);
   function signin() {
     setState("in");
   }
@@ -30,6 +31,7 @@ export function useFakeApi(): StorageApi {
         const newFile = { ...prevFile, body: text, version: newVersion };
         ret.success = true;
         ret.version = newFile.version;
+        console.log("we updated the files to:", { ...prev, [id]: newFile });
         return { ...prev, [id]: newFile };
       } else return prev;
     });

@@ -3,6 +3,13 @@ import { useAsyncState } from "../hooks/useAsyncState";
 import { useState } from "react";
 import { unstable_batchedUpdates as batch } from "react-dom";
 import { StorageApi } from "../storageApi";
+import styled from "styled-components";
+
+const FileContent = styled.div`
+  padding: 8px;
+  width: 500px;
+  float: left;
+`;
 
 export default function AsyncFileContent(props: {
   gapi: StorageApi;
@@ -16,7 +23,7 @@ export default function AsyncFileContent(props: {
   let [localText, setLocalText] = useState("");
 
   if (remote.error) alert(JSON.stringify(remote.error));
-  if (!remote.data) return <>N/A</>;
+  if (!remote.data) return <FileContent>N/A</FileContent>;
 
   async function saveFile(): Promise<void> {
     let result = await gapi.saveFile(selectedFileId, localText, base.version);
@@ -27,6 +34,7 @@ export default function AsyncFileContent(props: {
       batch(() => {
         remote.doInvalidate();
         setBase({ body: localText, version: result.newVersion });
+        console.log("set the baseee");
       });
 
       /* Possible improvement: Update remote state directly here, as we 'know' what it is on successfull save
@@ -59,10 +67,7 @@ export default function AsyncFileContent(props: {
   }
 
   return (
-    <span
-      style={{ width: "500px", float: "left" }}
-      title={"<" + remote.data.body + ">"}
-    >
+    <FileContent title={"<" + remote.data.body + ">"}>
       version=
       {remote.data.version}
       <br />
@@ -81,6 +86,6 @@ export default function AsyncFileContent(props: {
         style={{ width: "100%", height: "300px" }}
         value={localText}
       />
-    </span>
+    </FileContent>
   );
 }

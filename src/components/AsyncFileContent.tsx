@@ -27,14 +27,12 @@ export default function AsyncFileContent(props: {
 
   async function saveFile(): Promise<void> {
     let result = await gapi.saveFile(selectedFileId, localText, base.version);
-    console.log("Saved file, result: ", result);
     if (result.success) {
       // INVESTIGATE: swapping these lines seems to be cause weird stuff, while i really think the order here should not matter...
       //              react hooks bug? workaround with batch for now...
       batch(() => {
         remote.doInvalidate();
         setBase({ body: localText, version: result.newVersion });
-        console.log("set the baseee");
       });
 
       /* Possible improvement: Update remote state directly here, as we 'know' what it is on successfull save
@@ -48,10 +46,12 @@ export default function AsyncFileContent(props: {
     }
   }
 
+  // this checked 'remote.data.body != base.body' before instead of version.
+  // Not sure if this is how we should update, but I think so
   if (
     !remote.isFetching &&
     !remote.isInvalidated &&
-    remote.data.body != base.body
+    remote.data.version != base.version
   ) {
     if (localText == base.body) {
       // no local changes, update to remote state

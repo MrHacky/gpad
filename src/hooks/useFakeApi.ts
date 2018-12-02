@@ -7,7 +7,6 @@ export function useFakeApi(): StorageApi {
   const [files, updateFiles] = useLocalStorage("gpad-files", {} as FileInfoMap);
   const [id, updateId] = useLocalStorage("gpad-file-id", 1);
 
-  console.log(files);
   function signin() {
     setState("in");
   }
@@ -23,17 +22,14 @@ export function useFakeApi(): StorageApi {
     text: string,
     version: string
   ): Promise<any> {
-    let ret = { success: false, version: null };
     const currentFile = files[id];
     if (version == currentFile.version) {
       const newVersion = (parseInt(currentFile.version) + 1).toString();
       const newFile = { ...currentFile, body: text, version: newVersion };
-      ret.success = true;
-      ret.version = newFile.version;
-      console.log("we updated a file:", newFile);
       updateFiles({ ...files, [id]: newFile });
+      return { success: true, version: newFile.version };
     }
-    return ret;
+    return { success: false, version: null };
   }
   async function getFileList() {
     let ret = [];

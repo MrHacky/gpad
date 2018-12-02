@@ -4,8 +4,7 @@ import styled from "styled-components";
 
 const Sidebar = styled.div`
   background: #eee;
-  width: 400px;
-  float: left;
+  grid-area: files;
   padding: 8px;
 `;
 

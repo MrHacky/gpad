@@ -6,16 +6,27 @@ import AsyncFileContent from "./components/AsyncFileContent";
 import AsyncFileList from "./components/AsyncFileList";
 import { StorageApi } from "./storageApi";
 import Header from "./components/Header";
+import styled from "styled-components";
+
+const AppWrapper = styled.div`
+  display: grid;
+  grid-template-areas:
+    "header header header"
+    "files content content";
+  grid-template-rows: 50px 1fr;
+  grid-template-columns: 150px 1fr;
+  height: 100vh;
+`;
 
 export function App() {
   let gapi: StorageApi = useFakeApi(); //useGoogleApi();
   let [selectedFileId, setSelectedFileId] = useState(null);
 
   return (
-    <>
+    <AppWrapper>
       <Header gapi={gapi} />
       {gapi.state == "in" ? (
-        <div>
+        <>
           <AsyncFileList
             gapi={gapi}
             onFileClick={id => setSelectedFileId(id)}
@@ -26,8 +37,8 @@ export function App() {
             selectedFileId={selectedFileId}
             key={selectedFileId}
           />
-        </div>
+        </>
       ) : null}
-    </>
+    </AppWrapper>
   );
 }

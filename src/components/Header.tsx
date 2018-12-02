@@ -4,6 +4,7 @@ import { StorageApi } from "../storageApi";
 
 const HeaderDiv = styled.div`
   background: #ddd;
+  grid-area: header;
   padding: 8px;
 `;
 

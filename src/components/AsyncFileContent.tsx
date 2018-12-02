@@ -6,9 +6,41 @@ import { StorageApi } from "../storageApi";
 import styled from "styled-components";
 
 const FileContent = styled.div`
-  padding: 8px;
-  width: 500px;
-  float: left;
+  grid-area: content;
+`;
+
+const NoFileSelected = styled.div`
+  display: flex;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+`;
+
+const BeautifulTextArea = styled.textarea`
+  background: #111;
+  color: white;
+  width: 100%;
+  height: 100%;
+  border: none;
+  overflow: auto;
+  outline: none;
+  resize: none;
+`;
+
+const FileInfoHeader = styled.div`
+  background: #222;
+  color: #ddd;
+  padding: 4px;
+`;
+
+const InfoHeaderSpan = styled.span`
+  padding: 0px 4px;
+`;
+const GreenSpan = styled(InfoHeaderSpan)`
+  color: green;
+`;
+const RedInfoHeaderSpan = styled(InfoHeaderSpan)`
+  color: red;
 `;
 
 export default function AsyncFileContent(props: {
@@ -22,8 +54,8 @@ export default function AsyncFileContent(props: {
   let [base, setBase] = useState({ body: "", version: "" });
   let [localText, setLocalText] = useState("");
 
+  const hasRemoteData = remote.data;
   if (remote.error) alert(JSON.stringify(remote.error));
-  if (!remote.data) return <FileContent>N/A</FileContent>;
 
   async function saveFile(): Promise<void> {
     let result = await gapi.saveFile(selectedFileId, localText, base.version);
@@ -46,9 +78,17 @@ export default function AsyncFileContent(props: {
     }
   }
 
+  function handleKeyPress(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key == "s") {
+      saveFile();
+      e.preventDefault();
+    }
+  }
+
   // this checked 'remote.data.body != base.body' before instead of version.
   // Not sure if this is how we should update, but I think so
   if (
+    hasRemoteData &&
     !remote.isFetching &&
     !remote.isInvalidated &&
     remote.data.version != base.version
@@ -65,27 +105,34 @@ export default function AsyncFileContent(props: {
       alert("conflict");
     }
   }
+  const hasLocalChanges = localText != base.body;
 
   return (
-    <FileContent title={"<" + remote.data.body + ">"}>
-      version=
-      {remote.data.version}
-      <br />
-      isFetching=
-      {remote.isFetching ? "yes" : "no"}
-      <br />
-      isInvalidated=
-      {remote.isInvalidated ? "yes" : "no"}
-      <br />
-      local-changes=
-      {localText != base.body ? "yes" : "no"}
-      <br />
-      <button onClick={() => saveFile()}>Save</button>
-      <textarea
-        onChange={e => setLocalText(e.target.value)}
-        style={{ width: "100%", height: "300px" }}
-        value={localText}
-      />
+    <FileContent>
+      {hasRemoteData ? (
+        <>
+          <FileInfoHeader>
+            <button onClick={() => saveFile()}>Save</button>
+            <InfoHeaderSpan>version: {remote.data.version}</InfoHeaderSpan>
+            {remote.isFetching ? (
+              <InfoHeaderSpan>Fetching data...</InfoHeaderSpan>
+            ) : null}
+            {remote.isInvalidated ? (
+              <RedInfoHeaderSpan>Invalidated data!</RedInfoHeaderSpan>
+            ) : null}
+            {hasLocalChanges ? (
+              <GreenSpan>Has unsaved local changes</GreenSpan>
+            ) : null}
+          </FileInfoHeader>
+          <BeautifulTextArea
+            onKeyDown={e => handleKeyPress(e)}
+            onChange={e => setLocalText(e.target.value)}
+            value={localText}
+          />
+        </>
+      ) : (
+        <NoFileSelected>N/A</NoFileSelected>
+      )}
     </FileContent>
   );
 }

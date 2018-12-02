@@ -165,7 +165,7 @@ export class GoogleApi {
     });
     return {
       body: content.body,
-      etag: metadata.result.etag
+      version: metadata.result.etag
     };
   }
 

@@ -1,10 +1,10 @@
 import { unstable_batchedUpdates as batch } from "react-dom";
 import { useState } from "react";
 
-export function useAsyncState<T, I>(
-  initial: T,
-  id: I,
-  cb: (i: I) => Promise<T>
+export function useAsyncState<DataFormat, IdFormat>(
+  initial: DataFormat,
+  id: IdFormat,
+  cb: (i: IdFormat) => Promise<DataFormat>
 ) {
   let [isFetching, setIsFetching] = useState(false);
   let [isInvalidated, setIsInvalidated] = useState(false);

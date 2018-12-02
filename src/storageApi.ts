@@ -3,24 +3,24 @@ export interface StorageApi {
 
   signin(): void;
   signout(): void;
-  retrieveContent(id: string): Promise<{ body: string; etag: string }>;
+  retrieveContent(id: string): Promise<{ body: string; version: string }>;
   saveFile(
     id: string,
     text: string,
-    etag: string
-  ): Promise<{ success: boolean; etag: string }>;
+    currentVersion: string
+  ): Promise<{ success: boolean; newVersion: string }>;
   getFileList(): Promise<{ id: string; name: string }[]>;
   createFile(name: string, body: string): Promise<any>;
 }
 
 export interface File {
   body: string;
-  etag: string;
+  version: string;
 }
 
 export interface FileInfo {
   body: string;
-  version: number;
+  version: string;
   name: string;
 }
 

@@ -8,30 +8,25 @@ export default function AsyncFileContent(props: {
   gapi: StorageApi;
   selectedFileId;
 }) {
-  let remote = useAsyncState(
-    null,
-    props.selectedFileId,
-    async id =>
-      props.selectedFileId ? await props.gapi.retrieveContent(id) : null
+  const { selectedFileId, gapi } = props;
+  let remote = useAsyncState(null, selectedFileId, async id =>
+    selectedFileId ? await gapi.retrieveContent(id) : null
   );
-  let [base, setBase] = useState({ body: "", etag: "" });
+  let [base, setBase] = useState({ body: "", version: "" });
   let [localText, setLocalText] = useState("");
 
   if (remote.error) alert(JSON.stringify(remote.error));
   if (!remote.data) return <>N/A</>;
 
   async function saveFile(): Promise<void> {
-    let file = props.selectedFileId;
-    let etag = base.etag;
-    let text = localText;
-    let result = await props.gapi.saveFile(file, text, etag);
-    console.log(result);
+    let result = await gapi.saveFile(selectedFileId, localText, base.version);
+    console.log("Saved file, result: ", result);
     if (result.success) {
       // INVESTIGATE: swapping these lines seems to be cause weird stuff, while i really think the order here should not matter...
       //              react hooks bug? workaround with batch for now...
       batch(() => {
         remote.doInvalidate();
-        setBase({ body: text, etag: result.etag });
+        setBase({ body: localText, version: result.newVersion });
       });
 
       /* Possible improvement: Update remote state directly here, as we 'know' what it is on successfull save
@@ -68,8 +63,8 @@ export default function AsyncFileContent(props: {
       style={{ width: "500px", float: "left" }}
       title={"<" + remote.data.body + ">"}
     >
-      etag=
-      {remote.data.etag}
+      version=
+      {remote.data.version}
       <br />
       isFetching=
       {remote.isFetching ? "yes" : "no"}

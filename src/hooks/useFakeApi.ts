@@ -15,22 +15,22 @@ export function useFakeApi(): StorageApi {
   }
   async function retrieveContent(id: string): Promise<File> {
     let { body, version } = files[id];
-    return { body, etag: version.toString() };
+    return { body, version: version.toString() };
   }
   async function saveFile(
     id: string,
     text: string,
-    etag: string
+    version: string
   ): Promise<any> {
-    let ret = { success: false, etag: null };
+    let ret = { success: false, version: null };
     updateFiles(prev => {
-      const fi = prev[id];
-      console.log(prev, etag, fi);
-      if (etag == fi.version.toString()) {
-        const nfi = { ...fi, body: text, version: fi.version + 1 };
+      const prevFile = prev[id];
+      if (version == prevFile.version) {
+        const newVersion = (parseInt(prevFile.version) + 1).toString();
+        const newFile = { ...prevFile, body: text, version: newVersion };
         ret.success = true;
-        ret.etag = nfi.version.toString();
-        return { ...prev, [id]: nfi };
+        ret.version = newFile.version;
+        return { ...prev, [id]: newFile };
       } else return prev;
     });
     return ret;
@@ -46,7 +46,7 @@ export function useFakeApi(): StorageApi {
       curid = "" + prev;
       return ++prev;
     });
-    updateFiles(prev => ({ ...prev, [curid]: { body, version: 1, name } }));
+    updateFiles(prev => ({ ...prev, [curid]: { body, version: "1", name } }));
     return {};
   }
   return {

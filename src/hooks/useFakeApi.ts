@@ -24,17 +24,15 @@ export function useFakeApi(): StorageApi {
     version: string
   ): Promise<any> {
     let ret = { success: false, version: null };
-    updateFiles(prev => {
-      const prevFile = prev[id];
-      if (version == prevFile.version) {
-        const newVersion = (parseInt(prevFile.version) + 1).toString();
-        const newFile = { ...prevFile, body: text, version: newVersion };
-        ret.success = true;
-        ret.version = newFile.version;
-        console.log("we updated the files to:", { ...prev, [id]: newFile });
-        return { ...prev, [id]: newFile };
-      } else return prev;
-    });
+    const currentFile = files[id];
+    if (version == currentFile.version) {
+      const newVersion = (parseInt(currentFile.version) + 1).toString();
+      const newFile = { ...currentFile, body: text, version: newVersion };
+      ret.success = true;
+      ret.version = newFile.version;
+      console.log("we updated a file:", newFile);
+      updateFiles({ ...files, [id]: newFile });
+    }
     return ret;
   }
   async function getFileList() {
@@ -43,12 +41,9 @@ export function useFakeApi(): StorageApi {
     return ret;
   }
   async function createFile(name: string, body: string) {
-    let curid: string;
-    updateId(prev => {
-      curid = "" + prev;
-      return ++prev;
-    });
-    updateFiles(prev => ({ ...prev, [curid]: { body, version: "1", name } }));
+    let curid = id + 1;
+    updateId(curid);
+    updateFiles({ ...files, [curid]: { body, version: "1", name } });
     return {};
   }
   return {

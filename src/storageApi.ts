@@ -3,7 +3,7 @@ export interface StorageApi {
 
   signin(): void;
   signout(): void;
-  retrieveContent(id: string): Promise<{ body: string; version: string }>;
+  retrieveContent(id: string): Promise<File>;
   saveFile(
     id: string,
     text: string,
@@ -16,14 +16,4 @@ export interface StorageApi {
 export interface File {
   body: string;
   version: string;
-}
-
-export interface FileInfo {
-  body: string;
-  version: string;
-  name: string;
-}
-
-export interface FileInfoMap {
-  [key: string]: FileInfo;
 }

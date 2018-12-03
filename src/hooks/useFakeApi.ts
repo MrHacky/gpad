@@ -1,6 +1,17 @@
-import { StorageApi, FileInfoMap, File } from "./../storageApi";
+import { StorageApi, File } from "./../storageApi";
 import { useState } from "react";
 import { useLocalStorage } from "./useLocalStorage";
+
+
+interface FileInfo {
+  body: string;
+  version: string;
+  name: string;
+}
+
+interface FileInfoMap {
+  [id: string]: FileInfo;
+}
 
 export function useFakeApi(): StorageApi {
   const [state, setState] = useState("in");

@@ -2,6 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 import { useGoogleApi } from "./hooks/useGoogleApi";
 import { useFakeApi } from "./hooks/useFakeApi";
+import { useDelayedStorageApi } from "./hooks/useDelayedStorageApi";
 import AsyncFileContent from "./components/AsyncFileContent";
 import AsyncFileList from "./components/AsyncFileList";
 import { StorageApi } from "./storageApi";
@@ -19,7 +20,11 @@ const AppWrapper = styled.div`
 `;
 
 export function App() {
-  let gapi: StorageApi = useFakeApi(); //useGoogleApi();
+  //let gapi: StorageApi = useGoogleApi();
+  let gapi: StorageApi = useFakeApi();
+
+  gapi = useDelayedStorageApi(gapi, 500);
+
   let [selectedFileId, setSelectedFileId] = useState(null);
 
   return (

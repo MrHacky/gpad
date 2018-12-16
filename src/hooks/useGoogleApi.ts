@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { File } from "../storageApi";
+import { StorageApi, File, SaveResult } from "../storageApi";
 
 // Client ID and API key from the Developer Console
 var CLIENT_ID =
@@ -20,17 +20,25 @@ interface Props {
   onChange: Function;
 }
 
-export function useGoogleApi() {
-  const [o, setO] = useState(() => new GoogleApi(null));
-  const [state, setState] = useState("init");
+export function useGoogleApi(): StorageApi {
+	const [o, setO] = useState(() => new GoogleApi(null));
+	const [state, setState] = useState("init");
 
-  o.state = state;
+	o.state = state;
 
-  useEffect(() => {
-    o.initialize(setState);
-  }, []);
+	useEffect(() => {
+		o.initialize(setState);
+	}, []);
 
-  return o;
+	return {
+		state,
+		signin         : o.signin         .bind(o),
+		signout        : o.signout        .bind(o),
+		retrieveContent: o.retrieveContent.bind(o),
+		saveFile       : o.saveFile       .bind(o),
+		getFileList    : o.getFileList    .bind(o),
+		createFile     : o.createFile     .bind(o),
+	};
 }
 
 export class GoogleApi {
@@ -169,17 +177,18 @@ export class GoogleApi {
     };
   }
 
-  async saveFile(id, text, etag): Promise<any> {
+  async saveFile(id, text, etag): Promise<SaveResult> {
     let response = await this.doSaveRequest(id, text, etag);
     if (response.error) {
       if (response.error.code != 412) throw response.error;
       return {
-        success: false
+        success: false,
+		newVersion: '',
       };
     }
     return {
       success: true,
-      etag: response.etag
+      newVersion: response.etag,
     };
   }
 

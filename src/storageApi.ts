@@ -8,7 +8,7 @@ export interface StorageApi {
     id: string,
     text: string,
     currentVersion: string
-  ): Promise<{ success: boolean; newVersion: string }>;
+  ): Promise<SaveResult>;
   getFileList(): Promise<{ id: string; name: string }[]>;
   createFile(name: string, body: string): Promise<any>;
 }
@@ -16,4 +16,9 @@ export interface StorageApi {
 export interface File {
   body: string;
   version: string;
+}
+
+export interface SaveResult {
+	success: boolean;
+	newVersion: string;
 }

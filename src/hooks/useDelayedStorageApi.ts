@@ -23,13 +23,13 @@ function wrap(f: any, delayMs: number): any {
 }
 
 export function useDelayedStorageApi(api: StorageApi, delayMs: number) {
-  return {
-    state: api.state,
-    signin         : wrap(api.signin         , delayMs),
-    signout        : wrap(api.signout        , delayMs),
-    retrieveContent: wrap(api.retrieveContent, delayMs),
-    saveFile       : wrap(api.saveFile       , delayMs),
-    getFileList    : wrap(api.getFileList    , delayMs),
-    createFile     : wrap(api.createFile     , delayMs),
-  };
+	return {
+		state: api.state,
+		signin         : wrap(api.signin         , delayMs),
+		signout        : wrap(api.signout        , delayMs),
+		retrieveContent: wrap(api.retrieveContent, delayMs),
+		saveFile       : wrap(api.saveFile       , delayMs),
+		getFileList    : wrap(api.getFileList    , delayMs),
+		createFile     : wrap(api.createFile     , delayMs),
+	};
 }

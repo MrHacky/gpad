@@ -33,8 +33,8 @@ export function useFakeApi(): StorageApi {
 		text: string,
 		version: string
 	): Promise<SaveResult> {
-	// This needs to happen 'atomically'! (getFiles+setFiles)
-	const files = getFiles();
+		// This needs to happen 'atomically'! (getFiles+setFiles)
+		const files = getFiles();
 		const currentFile = files[id];
 		if (version == currentFile.version) {
 			const newVersion = (parseInt(currentFile.version) + 1).toString();
@@ -46,17 +46,17 @@ export function useFakeApi(): StorageApi {
 	}
 	async function getFileList() {
 		let ret = [];
-	const files = getFiles();
+		const files = getFiles();
 		for (let id in files)
 		ret.push({ id, name: files[id].name });
 		return ret;
 	}
 	async function createFile(name: string, body: string) {
-	// This needs to happen 'atomically'! (getIdCounter+setIdCounter)
+		// This needs to happen 'atomically'! (getIdCounter+setIdCounter)
 		let newId: number = getIdCounter() + 1;
-	setIdCounter(newId);
+		setIdCounter(newId);
 
-	// This needs to happen 'atomically'! (getFiles+setFiles)
+		// This needs to happen 'atomically'! (getFiles+setFiles)
 		setFiles({ ...getFiles(), [newId.toString()]: { body, version: "1", name } });
 		return {};
 	}

@@ -24,8 +24,6 @@ export function useGoogleApi(): StorageApi {
 	const [o, setO] = useState(() => new GoogleApi(null));
 	const [state, setState] = useState("init");
 
-	o.state = state;
-
 	useEffect(() => {
 		o.initialize(setState);
 	}, []);
@@ -43,7 +41,6 @@ export function useGoogleApi(): StorageApi {
 
 export class GoogleApi {
 	gapi: any;
-	state: string;
 
 	constructor(gapi: any) {
 		this.gapi = gapi;

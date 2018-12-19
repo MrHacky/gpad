@@ -180,7 +180,7 @@ export class GoogleApi {
 			if (response.error.code != 412) throw response.error;
 			return {
 				success: false,
-		newVersion: '',
+				newVersion: '',
 			};
 		}
 		return {

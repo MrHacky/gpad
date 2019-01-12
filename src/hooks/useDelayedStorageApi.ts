@@ -1,4 +1,4 @@
-import { StorageApi, File } from "./../storageApi";
+import { StorageApi } from "./../storageApi";
 
 function delay(delayMs: number): Promise<void> {
 	return new Promise<void>((resolve) => {

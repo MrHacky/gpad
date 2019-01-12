@@ -2,7 +2,7 @@ import * as React from "react";
 import { useAsyncState } from "../hooks/useAsyncState";
 import { useState } from "react";
 import { unstable_batchedUpdates as batch } from "react-dom";
-import { StorageApi } from "../storageApi";
+import { StorageApi, FileContent } from "../storageApi";
 import styled from "styled-components";
 
 const FileContent = styled.div`
@@ -43,13 +43,15 @@ const RedInfoHeaderSpan = styled(InfoHeaderSpan)`
 	color: red;
 `;
 
+const DummyFile: FileContent = { body: '', version: '' };
+
 export default function AsyncFileContent(props: {
 	gapi: StorageApi;
-	selectedFileId;
+	selectedFileId: string | null;
 }) {
 	const { selectedFileId, gapi } = props;
-	let remote = useAsyncState(null, selectedFileId, async id =>
-		selectedFileId ? await gapi.retrieveContent(id) : null
+	let remote = useAsyncState(DummyFile, selectedFileId, async id =>
+		id ? await gapi.retrieveContent(id) : DummyFile
 	);
 	let [base, setBase] = useState({ body: "", version: "" });
 	let [localText, setLocalText] = useState("");
@@ -58,6 +60,8 @@ export default function AsyncFileContent(props: {
 	if (remote.error) alert(JSON.stringify(remote.error));
 
 	async function saveFile(): Promise<void> {
+		if (selectedFileId == null)
+			return;
 		let result = await gapi.saveFile(selectedFileId, localText, base.version);
 		if (result.success) {
 			// INVESTIGATE: swapping these lines seems to be cause weird stuff, while i really think the order here should not matter...
@@ -78,7 +82,7 @@ export default function AsyncFileContent(props: {
 		}
 	}
 
-	function handleKeyPress(e) {
+	function handleKeyPress(e: React.KeyboardEvent<HTMLTextAreaElement>) {
 		if ((e.ctrlKey || e.metaKey) && e.key == "s") {
 			saveFile();
 			e.preventDefault();

@@ -1,4 +1,4 @@
-import { StorageApi, File, SaveResult } from "./../storageApi";
+import { StorageApi, FileContent, FileListEntry, SaveResult } from "./../storageApi";
 import { useState } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 
@@ -24,7 +24,7 @@ export function useFakeApi(): StorageApi {
 	function signout() {
 		setState("out");
 	}
-	async function retrieveContent(id: string): Promise<File> {
+	async function retrieveContent(id: string): Promise<FileContent> {
 		let { body, version } = getFiles()[id];
 		return { body, version: version.toString() };
 	}
@@ -42,13 +42,13 @@ export function useFakeApi(): StorageApi {
 			setFiles({ ...files, [id]: newFile });
 			return { success: true, newVersion: newFile.version };
 		}
-		return { success: false, newVersion: null };
+		return { success: false, newVersion: '*' };
 	}
-	async function getFileList() {
+	async function getFileList(): Promise<FileListEntry[]> {
 		let ret = [];
 		const files = getFiles();
 		for (let id in files)
-		ret.push({ id, name: files[id].name });
+			ret.push({ id, name: files[id].name });
 		return ret;
 	}
 	async function createFile(name: string, body: string) {
@@ -58,7 +58,6 @@ export function useFakeApi(): StorageApi {
 
 		// This needs to happen 'atomically'! (getFiles+setFiles)
 		setFiles({ ...getFiles(), [newId.toString()]: { body, version: "1", name } });
-		return {};
 	}
 	return {
 		state,

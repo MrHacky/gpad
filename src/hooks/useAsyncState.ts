@@ -8,7 +8,7 @@ export function useAsyncState<DataFormat, IdFormat>(
 ) {
 	let [isFetching, setIsFetching] = useState(false);
 	let [isInvalidated, setIsInvalidated] = useState(false);
-	let [currentId, setCurrentId] = useState(undefined);
+	let [currentId, setCurrentId] = useState<IdFormat | undefined>(undefined);
 	let [currentData, setCurrentData] = useState(initial);
 	let [currentError, setCurrentError] = useState(null);
 

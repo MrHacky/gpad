@@ -1,5 +1,7 @@
 import * as React from "react";
 import { useAsyncState } from "../hooks/useAsyncState";
+import { StorageApi, FileListEntry } from "../storageApi";
+
 import styled from "styled-components";
 
 const Sidebar = styled.div`
@@ -8,9 +10,15 @@ const Sidebar = styled.div`
 	padding: 8px;
 `;
 
-export default function AsyncFileList({ gapi, onFileClick, selectedFileId }) {
+interface AsyncFileListProps {
+	gapi: StorageApi;
+	selectedFileId: string | null;
+	onFileClick: (id: string) => void;
+};
+
+export default function AsyncFileList({ gapi, onFileClick, selectedFileId }: AsyncFileListProps) {
 	let { data, isFetching, isInvalidated, doInvalidate } = useAsyncState(
-		[] as { id: string; name: string }[],
+		[],
 		null,
 		() => gapi.getFileList()
 	);

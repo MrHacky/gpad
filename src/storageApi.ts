@@ -3,17 +3,22 @@ export interface StorageApi {
 
 	signin(): void;
 	signout(): void;
-	retrieveContent(id: string): Promise<File>;
+	retrieveContent(id: string): Promise<FileContent>;
 	saveFile(
 		id: string,
 		text: string,
 		currentVersion: string
 	): Promise<SaveResult>;
-	getFileList(): Promise<{ id: string; name: string }[]>;
-	createFile(name: string, body: string): Promise<any>;
+	getFileList(): Promise<FileListEntry[]>;
+	createFile(name: string, body: string): Promise<void>;
 }
 
-export interface File {
+export interface FileListEntry {
+	id: string;
+	name: string;
+}
+
+export interface FileContent {
 	body: string;
 	version: string;
 }

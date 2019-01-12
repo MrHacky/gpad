@@ -4,7 +4,7 @@ export function useLocalStorage<T>(
 	key: string,
 	initialValue: T
 ): [() => T, (value: T) => void] {
-	const getValue = () => {
+	const getValue = (): T => {
 		const storedValue = window.localStorage.getItem(key);
 		//console.log("Get", key, storedValue);
 		if (typeof storedValue !== "string")
@@ -13,7 +13,7 @@ export function useLocalStorage<T>(
 			return JSON.parse(storedValue);
 	};
 
-	const setValue = value => {
+	const setValue = (value: T) => {
 		//console.log("Set", key, value);
 		window.localStorage.setItem(key, JSON.stringify(value));
 	};

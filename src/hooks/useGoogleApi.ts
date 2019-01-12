@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StorageApi, File, SaveResult } from "../storageApi";
+import { StorageApi, FileListEntry, FileContent, SaveResult } from "../storageApi";
 
 // Client ID and API key from the Developer Console
 var CLIENT_ID =
@@ -46,7 +46,7 @@ export class GoogleApi {
 		this.gapi = gapi;
 	}
 
-	async initialize(setState: (string) => void): Promise<void> {
+	async initialize(setState: (state: string) => void): Promise<void> {
 		setState("fetching");
 		{
 			let script = document.createElement("script");
@@ -54,12 +54,13 @@ export class GoogleApi {
 				script.async = true;
 				script.defer = true;
 				script.src = "https://apis.google.com/js/api.js";
-				script.onload = resolve as any;
+				script.onload = () => resolve();
 				document.head.appendChild(script);
 			});
 			setState("loading");
 			script.onload = function() {};
-			script.parentNode.removeChild(script);
+			if (script.parentNode)
+				script.parentNode.removeChild(script);
 			let w = window as any;
 			this.gapi = w.gapi;
 		}
@@ -72,20 +73,20 @@ export class GoogleApi {
 			scope: SCOPES
 		});
 
-		function updateSigninStatus(isSignedIn) {
+		function updateSigninStatus(isSignedIn: boolean) {
 			setState(isSignedIn ? "in" : "out");
 		}
 
 		// Subscribe to state changes
 		this.gapi.auth2
 			.getAuthInstance()
-			.isSignedIn.listen(s => updateSigninStatus(s));
+			.isSignedIn.listen((s: boolean) => updateSigninStatus(s));
 
 		// Handle the initial sign-in state.
 		updateSigninStatus(this.gapi.auth2.getAuthInstance().isSignedIn.get());
 	}
 
-	makePromise<T>(request): Promise<T> {
+	makePromise<T>(request: any): Promise<T> {
 		return new Promise<T>(resolve => {
 			request.execute(resolve);
 		});
@@ -102,7 +103,7 @@ export class GoogleApi {
 	}
 
 	// TODO: properly detect case where the file already exists, probably in a function using this one
-	createFile(fileName, body) {
+	createFile(fileName: string, body: string) {
 		const boundary =
 			"-------314159265358979323846X" +
 			(100000 + Math.floor(Math.random() * 100000));
@@ -138,10 +139,10 @@ export class GoogleApi {
 			},
 			body: multipartRequestBody
 		});
-		return this.makePromise<any>(request);
+		return this.makePromise<void>(request);
 	}
 
-	doSaveRequest(fileId, fileData, etag) {
+	doSaveRequest(fileId: string, fileData: string, etag: string) {
 		var request = this.gapi.client.request({
 			path: "/upload/drive/v2/files/" + fileId,
 			method: "PUT",
@@ -155,7 +156,7 @@ export class GoogleApi {
 		return this.makePromise<any>(request);
 	}
 
-	async retrieveContent(fileId): Promise<File> {
+	async retrieveContent(fileId: string): Promise<FileContent> {
 		// alt=media request use different etag values than metadata requests, and uploads need the metadata etag value
 		// so we first do a metadata request to get the etag, and also the headRevisionId which should uniquely identify the content
 		// then we use the headRevisionId to retreive the actual content, and ignore the etag header in this request
@@ -174,7 +175,7 @@ export class GoogleApi {
 		};
 	}
 
-	async saveFile(id, text, etag): Promise<SaveResult> {
+	async saveFile(id: string, text: string, etag: string): Promise<SaveResult> {
 		let response = await this.doSaveRequest(id, text, etag);
 		if (response.error) {
 			if (response.error.code != 412) throw response.error;
@@ -189,11 +190,12 @@ export class GoogleApi {
 		};
 	}
 
-	async getFileList(): Promise<any[]> {
+	async getFileList(): Promise<FileListEntry[]> {
 		let qr = await this.gapi.client.drive.files.list({
 			q: "'root' in parents",
 			fields: "nextPageToken, items(id, title)"
 		});
-		return qr.result.items.map(x => ({ ...x, name: x.title }));
+		// WEB-API typing!
+		return qr.result.items.map((x: { title: string }) => ({ ...x, name: x.title }));
 	}
 }

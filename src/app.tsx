@@ -25,7 +25,7 @@ export function App() {
 
 	gapi = useDelayedStorageApi(gapi, 500);
 
-	let [selectedFileId, setSelectedFileId] = useState(null);
+	let [selectedFileId, setSelectedFileId] = useState<string | null>(null);
 
 	return (
 		<AppWrapper>
@@ -34,13 +34,12 @@ export function App() {
 				<>
 					<AsyncFileList
 						gapi={gapi}
-						onFileClick={id => setSelectedFileId(id)}
+						onFileClick={(id: string) => setSelectedFileId(id)}
 						selectedFileId={selectedFileId}
 					/>
 					<AsyncFileContent
 						gapi={gapi}
 						selectedFileId={selectedFileId}
-						key={selectedFileId}
 					/>
 				</>
 			) : null}

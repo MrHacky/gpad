@@ -89,6 +89,14 @@ export default function AsyncFileContent(props: {
 		}
 	}
 
+	async function doWrap() {
+		let i = await import("../test");
+		i.testIt(1);
+		i.default(2);
+		let c = new i.MyClass();
+		c.num;
+	}
+
 	// this checked 'remote.data.body != base.body' before instead of version.
 	// Not sure if this is how we should update, but I think so
 	if (
@@ -116,7 +124,7 @@ export default function AsyncFileContent(props: {
 			{hasRemoteData ? (
 				<>
 					<FileInfoHeader>
-						<button onClick={() => saveFile()}>Save</button>
+						<button onClick={() => doWrap()}>Save</button>
 						<InfoHeaderSpan>version: {remote.data.version}</InfoHeaderSpan>
 						{remote.isFetching ? (
 							<InfoHeaderSpan>Fetching data...</InfoHeaderSpan>

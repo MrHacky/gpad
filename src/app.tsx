@@ -9,6 +9,9 @@ import { StorageApi } from "./storageApi";
 import Header from "./components/Header";
 import styled from "styled-components";
 
+import * as wrap from "./wrap";
+//declare wrap: number;
+
 const AppWrapper = styled.div`
 	display: grid;
 	grid-template-areas:
@@ -19,6 +22,7 @@ const AppWrapper = styled.div`
 	height: 100vh;
 `;
 
+
 export function App() {
 	//let gapi: StorageApi = useGoogleApi();
 	let gapi: StorageApi = useFakeApi();
@@ -27,8 +31,18 @@ export function App() {
 
 	let [selectedFileId, setSelectedFileId] = useState<string | null>(null);
 
+	async function doWrap() {
+		let i = await import("./test");
+		
+		i.testIt(1);
+		i.default(2);
+		let c = new i.MyClass();
+		c.num;
+	}
+
 	return (
 		<AppWrapper>
+			<button onClick={doWrap}>Wrap</button>
 			<Header gapi={gapi} />
 			{gapi.state == "in" ? (
 				<>

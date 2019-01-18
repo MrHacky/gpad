@@ -21,14 +21,15 @@ module.exports = {
 	module: {
 		rules: [
 			// All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
-			{ test: /\.tsx?$/, loaders: ["awesome-typescript-loader"] },
+			{ test: /\.tsx?$/, loaders: [path.resolve("./loaders/ts-post.js"), "ts-loader", path.resolve("./loaders/ts-pre.js")] },
+			//{ test: /\.tsx?$/, loaders: ["ts-loader"] },
 			// All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
 			{ enforce: "pre", test: /\.js$/, loader: "source-map-loader" }
 		]
 	},
 	plugins: [
 		new CleanWebpackPlugin(['dist']),
-		new webpack.NamedModulesPlugin(),
+		//new webpack.NamedModulesPlugin(),
 		/*
 		new webpack.DefinePlugin({
 			'process.env': {
@@ -45,5 +46,6 @@ module.exports = {
 	output: {
 		filename: '[name].bundle.js',
 		path: path.resolve(__dirname, 'dist')
-	}
+	},
+	mode: 'development'
 };

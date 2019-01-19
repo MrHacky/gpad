@@ -23,10 +23,9 @@ export default function AsyncFileList({ gapi, onFileClick, selectedFileId }: Asy
 		() => gapi.getFileList()
 	);
 
-	function createFile() {
-		gapi.createFile("test.txt", "").then(function(result) {
-			alert(JSON.stringify(result));
-		});
+	async function createFile() {
+		const result = await gapi.createFile("test.txt", "");
+		await doInvalidate();
 	}
 
 	return (

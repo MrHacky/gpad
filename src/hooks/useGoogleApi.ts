@@ -48,7 +48,7 @@ export class GoogleApi {
 
 	async initialize(setState: (state: string) => void): Promise<void> {
 		setState("fetching");
-		{
+		if (!(window as any).gapi) {
 			let script = document.createElement("script");
 			await new Promise<void>(resolve => {
 				script.async = true;
@@ -63,7 +63,8 @@ export class GoogleApi {
 				script.parentNode.removeChild(script);
 			let w = window as any;
 			this.gapi = w.gapi;
-		}
+		} else
+			this.gapi = (window as any).gapi;
 		await new Promise<void>(resolve => this.gapi.load("client:auth2", resolve));
 		setState("authenticating");
 		await this.gapi.client.init({

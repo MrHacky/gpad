@@ -8,11 +8,13 @@ const HeaderDiv = styled.div`
 	padding: 8px;
 `;
 
-export default function Header(props: { gapi: StorageApi }) {
-	const { gapi } = props;
+export default function Header(props: { gapi: StorageApi, fake: boolean, toggleFake: () => void }) {
+	const { gapi, fake, toggleFake } = props;
 	const loggedIn = gapi.state == "in";
 	return (
 		<HeaderDiv>
+			Using: {fake ? 'LocalStorage' : 'Google Drive'}
+			<button onClick={toggleFake}>Switch</button>
 			{loggedIn ? (
 				<button onClick={() => gapi.signout()}>Sign Out</button>
 			) : (

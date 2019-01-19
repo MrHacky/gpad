@@ -6,6 +6,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = {
+	mode: 'production',
 	entry: [
 		'./src/index.tsx'
 	],
@@ -28,8 +29,8 @@ module.exports = {
 	},
 	plugins: [
 		new CleanWebpackPlugin(['dist']),
-		new webpack.NamedModulesPlugin(),
 		/*
+		new webpack.NamedModulesPlugin(),
 		new webpack.DefinePlugin({
 			'process.env': {
 				'NODE_ENV': '"production"',

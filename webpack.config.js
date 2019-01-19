@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const webpack = require('webpack');
 
@@ -29,6 +30,7 @@ module.exports = {
 	},
 	plugins: [
 		new CleanWebpackPlugin(['dist']),
+		new CopyWebpackPlugin([{ from: 'public', to: '.' }]),
 		/*
 		new webpack.NamedModulesPlugin(),
 		new webpack.DefinePlugin({
@@ -41,7 +43,7 @@ module.exports = {
 		*/
 		new HtmlWebpackPlugin({
 			title: 'Hello World'
-		})
+		}),
 	],
 	output: {
 		filename: '[name].bundle.js',

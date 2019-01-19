@@ -56,6 +56,7 @@ export default function AsyncFileContent(props: {
 	let [base, setBase] = useState({ body: "", version: "" });
 	let [localText, setLocalText] = useState("");
 
+	let [isSaving, setIsSaving] = useState(false);
 	let [autosave, setAutoSave] = useState(true);
 
 	const hasRemoteData = remote.data;
@@ -64,12 +65,16 @@ export default function AsyncFileContent(props: {
 	async function saveFile(): Promise<void> {
 		if (selectedFileId == null)
 			return;
+		if (isSaving)
+			return;
+		setIsSaving(true);
 		let result = await gapi.saveFile(selectedFileId, localText, base.version);
 		if (result.success) {
 			// INVESTIGATE: swapping these lines seems to be cause weird stuff, while i really think the order here should not matter...
 			//              react hooks bug? workaround with batch for now...
 			batch(() => {
 				remote.doInvalidate();
+				setIsSaving(false);
 				setBase({ body: localText, version: result.newVersion });
 			});
 
@@ -80,6 +85,7 @@ export default function AsyncFileContent(props: {
 			});
 			*/
 		} else {
+			setIsSaving(false);
 			console.error("Conflict on save");
 		}
 	}
@@ -126,14 +132,18 @@ export default function AsyncFileContent(props: {
 			{hasRemoteData ? (
 				<>
 					<FileInfoHeader>
+						<button onClick={() => remote.doInvalidate()}>Refresh</button>
 						<button onClick={() => saveFile()}>Save</button>
 						<label><input type="checkbox" checked={autosave} onChange={(e) => setAutoSave(e.target.checked)}/>autosave</label>
 						<InfoHeaderSpan>version: {remote.data.version}</InfoHeaderSpan>
+						{isSaving ? (
+							<InfoHeaderSpan>Saving...</InfoHeaderSpan>
+						) : null}
 						{remote.isFetching ? (
-							<InfoHeaderSpan>Fetching data...</InfoHeaderSpan>
+							<InfoHeaderSpan>Fetching...</InfoHeaderSpan>
 						) : null}
 						{remote.isInvalidated ? (
-							<RedInfoHeaderSpan>Invalidated data!</RedInfoHeaderSpan>
+							<InfoHeaderSpan>Invalidated</InfoHeaderSpan>
 						) : null}
 						{hasLocalChanges ? (
 							<GreenSpan>Has unsaved local changes</GreenSpan>

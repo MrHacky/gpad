@@ -40,9 +40,9 @@ export default function AsyncFileList({ gapi, onFileClick, selectedFileId }: Asy
 			{data
 				.filter(f => f.name.match(/\.txt$/))
 				.map(({ id, name }) => (
-					<div key={id} onClick={() => onFileClick(id)}>
+					<div key={id} title={id} onClick={() => onFileClick(id)}>
 						{id == selectedFileId ? ">" : ""}
-						{name} ({id})
+						{name}
 					</div>
 				))}
 		</Sidebar>

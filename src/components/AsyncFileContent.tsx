@@ -42,6 +42,10 @@ const GreenSpan = styled(InfoHeaderSpan)`
 const RedInfoHeaderSpan = styled(InfoHeaderSpan)`
 	color: red;
 `;
+const SmallInfoHeaderSpan = styled(InfoHeaderSpan)`
+	color: #666;
+	font-size: .75em;
+`;
 
 const DummyFile: FileContent = { body: '', version: '' };
 
@@ -59,7 +63,7 @@ export default function AsyncFileContent(props: {
 	let [isSaving, setIsSaving] = useState(false);
 	let [autosave, setAutoSave] = useState(true);
 
-	const hasRemoteData = remote.data;
+	const hasRemoteData = remote.data.version != '';
 	if (remote.error) alert(JSON.stringify(remote.error));
 
 	async function saveFile(): Promise<void> {
@@ -103,6 +107,7 @@ export default function AsyncFileContent(props: {
 		hasRemoteData &&
 		!remote.isFetching &&
 		!remote.isInvalidated &&
+		!isSaving &&
 		remote.data.version != base.version
 	) {
 		if (localText == base.body) {
@@ -135,7 +140,7 @@ export default function AsyncFileContent(props: {
 						<button onClick={() => remote.doInvalidate()}>Refresh</button>
 						<button onClick={() => saveFile()}>Save</button>
 						<label><input type="checkbox" checked={autosave} onChange={(e) => setAutoSave(e.target.checked)}/>autosave</label>
-						<InfoHeaderSpan>version: {remote.data.version}</InfoHeaderSpan>
+						<SmallInfoHeaderSpan>version: {remote.data.version}</SmallInfoHeaderSpan>
 						{isSaving ? (
 							<InfoHeaderSpan>Saving...</InfoHeaderSpan>
 						) : null}

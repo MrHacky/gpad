@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack-dev-server --open",
-    "build": "webpack"
+    "build": "webpack",
+    "prep-transform": "tsc --module commonjs loaders/ts-transform-restore-import.ts"
   },
   "keywords": [],
   "author": "",

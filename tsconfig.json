@@ -9,7 +9,7 @@
     "jsx": "react",
     "allowJs": true,
   },
-  "include": [
-    "./src/**/*"
+  "files": [
+    "./src/index.tsx"
   ],
 }

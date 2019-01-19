@@ -21,8 +21,11 @@ module.exports = {
 	module: {
 		rules: [
 			// All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
-			{ test: /\.tsx?$/, loaders: [path.resolve("./loaders/ts-post.js"), "ts-loader", path.resolve("./loaders/ts-pre.js")] },
-			//{ test: /\.tsx?$/, loaders: ["ts-loader"] },
+			//test: /\.tsx?$/, loaders: [path.resolve("./loaders/ts-post.js"), "ts-loader", path.resolve("./loaders/ts-pre.js")] },
+			{ test: /\.tsx?$/, loader: "ts-loader", options: { getCustomTransformers: path.resolve(__dirname, './loaders/ts-transform-restore-import.js') } },
+			//{ test: /\.tsx?$/, loader: "awesome-typescript-loader", options: { useCache: true, getCustomTransformers: path.resolve(__dirname, './loaders/ts-transform-restore-import.js') } },
+
+			//{ test: /\.tsx?$/, loader: "ts-loader", options: { getCustomTransformers: tfx() } },
 			// All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
 			{ enforce: "pre", test: /\.js$/, loader: "source-map-loader" }
 		]

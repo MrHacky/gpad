@@ -20,10 +20,10 @@ const AppWrapper = styled.div`
 `;
 
 export function App() {
-	//let gapi: StorageApi = useGoogleApi();
-	let gapi: StorageApi = useFakeApi();
+	let gapi: StorageApi = useGoogleApi();
+	//let gapi: StorageApi = useFakeApi();
 
-	gapi = useDelayedStorageApi(gapi, 500);
+	//gapi = useDelayedStorageApi(gapi, 500);
 
 	let [selectedFileId, setSelectedFileId] = useState<string | null>(null);
 

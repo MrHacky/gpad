@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useAsyncState } from "../hooks/useAsyncState";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { unstable_batchedUpdates as batch } from "react-dom";
 import { StorageApi, FileContent } from "../storageApi";
 import styled from "styled-components";
@@ -55,6 +55,8 @@ export default function AsyncFileContent(props: {
 	);
 	let [base, setBase] = useState({ body: "", version: "" });
 	let [localText, setLocalText] = useState("");
+
+	let [autosave, setAutoSave] = useState(true);
 
 	const hasRemoteData = remote.data;
 	if (remote.error) alert(JSON.stringify(remote.error));
@@ -111,12 +113,21 @@ export default function AsyncFileContent(props: {
 	}
 	const hasLocalChanges = localText != base.body;
 
+	useEffect(() => {
+		const handle = window.setInterval(() => {
+			if (autosave && selectedFileId != null && hasLocalChanges)
+				saveFile();
+		}, 5000);
+		return () => window.clearInterval(handle);
+	}, [autosave, selectedFileId, hasLocalChanges, saveFile]);
+
 	return (
 		<FileContent>
 			{hasRemoteData ? (
 				<>
 					<FileInfoHeader>
 						<button onClick={() => saveFile()}>Save</button>
+						<label><input type="checkbox" checked={autosave} onChange={(e) => setAutoSave(e.target.checked)}/>autosave</label>
 						<InfoHeaderSpan>version: {remote.data.version}</InfoHeaderSpan>
 						{remote.isFetching ? (
 							<InfoHeaderSpan>Fetching data...</InfoHeaderSpan>

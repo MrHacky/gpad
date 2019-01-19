@@ -42,7 +42,7 @@ module.exports = {
 		new UglifyJsPlugin(),
 		*/
 		new HtmlWebpackPlugin({
-			title: 'Hello World'
+			title: 'gPad'
 		}),
 	],
 	output: {

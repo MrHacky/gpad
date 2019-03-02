@@ -20,7 +20,12 @@ interface Props {
 	onChange: Function;
 }
 
-export function useGoogleApi(): StorageApi {
+export interface GoogleStorageApi extends StorageApi {
+	createFolder(name: string): Promise<string>;
+	queryFileList(query: string): Promise<FileListEntry[]>;
+}
+
+export function useGoogleApi(): GoogleStorageApi {
 	const [o, setO] = useState(() => new GoogleApi(null));
 	const [state, setState] = useState("init");
 
@@ -36,6 +41,8 @@ export function useGoogleApi(): StorageApi {
 		saveFile       : o.saveFile       .bind(o),
 		getFileList    : o.getFileList    .bind(o),
 		createFile     : o.createFile     .bind(o),
+		createFolder   : o.createFolder   .bind(o),
+		queryFileList  : o.queryFileList  .bind(o),
 	};
 }
 
@@ -103,6 +110,21 @@ export class GoogleApi {
 		this.gapi.auth2.getAuthInstance().signOut();
 	}
 
+	async createFolder(name: string): Promise<string> {
+		const fileMetadata = {
+			'title': name,
+			'mimeType': 'application/vnd.google-apps.folder',
+		};
+		let request = await this.gapi.client.drive.files.insert({
+			resource: fileMetadata,
+			fields: 'id',
+		});
+		if (request.status == 200)
+			return request.result.id;
+		else
+			throw new Error(request);
+	}
+
 	// TODO: properly detect case where the file already exists, probably in a function using this one
 	createFile(fileName: string, body: string) {
 		const boundary =
@@ -140,7 +162,7 @@ export class GoogleApi {
 			},
 			body: multipartRequestBody
 		});
-		return this.makePromise<void>(request);
+		return this.makePromise<any>(request);
 	}
 
 	doSaveRequest(fileId: string, fileData: string, etag: string) {
@@ -150,7 +172,7 @@ export class GoogleApi {
 			params: { uploadType: "media", alt: "json", fields: "etag" },
 			headers: {
 				"Content-Type": "application/octet-stream",
-				"If-Match": etag
+				...(etag ? { "If-Match": etag } : {}),
 			},
 			body: fileData
 		});
@@ -191,12 +213,16 @@ export class GoogleApi {
 		};
 	}
 
-	async getFileList(): Promise<FileListEntry[]> {
+	async queryFileList(query: string): Promise<FileListEntry[]> {
 		let qr = await this.gapi.client.drive.files.list({
-			q: "'root' in parents",
+			q: query,
 			fields: "nextPageToken, items(id, title)"
 		});
 		// WEB-API typing!
 		return qr.result.items.map((x: { title: string }) => ({ ...x, name: x.title }));
+	}
+
+	async getFileList(): Promise<FileListEntry[]> {
+		return await this.queryFileList("'root' in parents and trashed = false");
 	}
 }

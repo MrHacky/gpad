@@ -20,6 +20,12 @@ const AppWrapper = styled.div`
 	height: 100vh;
 `;
 
+const Sidebar = styled.div`
+	background: #eee;
+	grid-area: files;
+	padding: 8px;
+`;
+
 function GoogleApiUser(props: { handleGapiChange: Function}) {
 	let gapi: StorageApi = useGoogleApi();
 	useEffect(() => {
@@ -42,6 +48,8 @@ export function App() {
 	let [fake, setFake] = useStateAndCookie(false, 'gpad-api-selector', { days: 350 });
 
 	let [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+	let [isRenaming, setIsRenaming] = useState<boolean>(false);
+	let [renameText, setRenameText] = useState<string>('');
 
 	// The actual StorageApi creation is hidden inside the *User components
 	// to get around the requirement that hooks cannot be called conditionally
@@ -56,17 +64,41 @@ export function App() {
 		setSelectedFileId(null);
 	};
 
+	function onFileClick(id: string, name: string) {
+		if (!isRenaming && selectedFileId == id) {
+			setIsRenaming(true);
+			setRenameText(name);
+		} else {
+			setIsRenaming(false);
+			setSelectedFileId(id);
+		}
+	}
+
+	async function doRename() {
+		if (!gapi || !selectedFileId)
+			return;
+		let { success } = await gapi.renameFile(selectedFileId, renameText);
+		if (success)
+			setIsRenaming(false);
+	}
+
 	return (
 		<AppWrapper>
 			<GapiUser handleGapiChange={setGapi}/>
 			{gapi ? <Header gapi={gapi} fake={fake} toggleFake={toggleFake}/> : 'Loading...'}
 			{gapi && gapi.state == "in" ? (
 			<>
-				<AsyncFileList
-					gapi={gapi}
-					onFileClick={(id: string) => setSelectedFileId(id)}
-					selectedFileId={selectedFileId}
-				/>
+				<Sidebar>
+					<AsyncFileList
+						gapi={gapi}
+						onFileClick={onFileClick}
+						selectedFileId={selectedFileId}
+					/>
+					{isRenaming ? <>
+						<input type="text" value={renameText} onChange={event => setRenameText(event.target.value)} />
+						<button onClick={doRename}>Rename</button>
+					</>: null}
+				</Sidebar>
 				<AsyncFileContent
 					gapi={gapi}
 					selectedFileId={selectedFileId}

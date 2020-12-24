@@ -31,5 +31,6 @@ export function useDelayedStorageApi(api: StorageApi, delayMs: number) {
 		saveFile       : wrap(api.saveFile       , delayMs),
 		getFileList    : wrap(api.getFileList    , delayMs),
 		createFile     : wrap(api.createFile     , delayMs),
+		renameFile     : wrap(api.renameFile     , delayMs),
 	};
 }

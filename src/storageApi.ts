@@ -11,6 +11,7 @@ export interface StorageApi {
 	): Promise<SaveResult>;
 	getFileList(): Promise<FileListEntry[]>;
 	createFile(name: string, body: string): Promise<void>;
+	renameFile(id: string, name: string): Promise<{ success: boolean }>;
 }
 
 export interface FileListEntry {

@@ -59,6 +59,10 @@ export function useFakeApi(): StorageApi {
 		// This needs to happen 'atomically'! (getFiles+setFiles)
 		setFiles({ ...getFiles(), [newId.toString()]: { body, version: "1", name } });
 	}
+	async function renameFile(id: string, name: string) {
+		// TODO
+		return { success: false };
+	}
 	return {
 		state,
 		signin,
@@ -66,6 +70,7 @@ export function useFakeApi(): StorageApi {
 		retrieveContent,
 		saveFile,
 		getFileList,
-		createFile
+		createFile,
+		renameFile,
 	};
 }

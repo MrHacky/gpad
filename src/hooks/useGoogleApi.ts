@@ -42,6 +42,7 @@ export function useGoogleApi(): GoogleStorageApi {
 		getFileList    : o.getFileList    .bind(o),
 		createFile     : o.createFile     .bind(o),
 		createFolder   : o.createFolder   .bind(o),
+		renameFile     : o.renameFile     .bind(o),
 		queryFileList  : o.queryFileList  .bind(o),
 	};
 }
@@ -177,6 +178,32 @@ export class GoogleApi {
 			body: fileData
 		});
 		return this.makePromise<any>(request);
+	}
+
+	doRenameRequest(fileId: string, name: string) {
+		var request = this.gapi.client.request({
+			path: "/drive/v2/files/" + fileId,
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				title: name,
+			})
+		});
+		return this.makePromise<any>(request);
+	}
+
+	async renameFile(fileId: string, name: string) {
+		let response = await this.doRenameRequest(fileId, name);
+		if (response.error) {
+			return {
+				success: false,
+			};
+		}
+		return {
+			success: true,
+		};
 	}
 
 	async retrieveContent(fileId: string): Promise<FileContent> {

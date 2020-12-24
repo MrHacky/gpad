@@ -2,18 +2,10 @@ import * as React from "react";
 import { useAsyncState } from "../hooks/useAsyncState";
 import { StorageApi, FileListEntry } from "../storageApi";
 
-import styled from "styled-components";
-
-const Sidebar = styled.div`
-	background: #eee;
-	grid-area: files;
-	padding: 8px;
-`;
-
 interface AsyncFileListProps {
 	gapi: StorageApi;
 	selectedFileId: string | null;
-	onFileClick: (id: string) => void;
+	onFileClick: (id: string, name: string) => void;
 };
 
 export default function AsyncFileList({ gapi, onFileClick, selectedFileId }: AsyncFileListProps) {
@@ -28,8 +20,13 @@ export default function AsyncFileList({ gapi, onFileClick, selectedFileId }: Asy
 		await doInvalidate();
 	}
 
+	const txtFiles: FileListEntry[] = data
+		.filter(f => f.name.match(/\.txt$/))
+	;
+	const selectedFile: FileListEntry | null = txtFiles.filter(({ id }) => id == selectedFileId)[0];
+
 	return (
-		<Sidebar>
+		<>
 			<div>
 				<button onClick={() => createFile()}>New file</button>
 				<button onClick={doInvalidate}>Invalidate</button>
@@ -37,14 +34,14 @@ export default function AsyncFileList({ gapi, onFileClick, selectedFileId }: Asy
 				{isInvalidated ? "Invalidated " : ""}
 			</div>
 			<h4>Files:</h4>
-			{data
-				.filter(f => f.name.match(/\.txt$/))
+			{txtFiles
 				.map(({ id, name }) => (
-					<div key={id} title={id} onClick={() => onFileClick(id)}>
+					<div key={id} title={id} onClick={() => onFileClick(id, name)}>
 						{id == selectedFileId ? ">" : ""}
 						{name}
 					</div>
-				))}
-		</Sidebar>
+				))
+			}
+		</>
 	);
 }

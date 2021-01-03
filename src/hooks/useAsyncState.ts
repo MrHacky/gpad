@@ -1,5 +1,5 @@
 import { unstable_batchedUpdates as batch } from "react-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function useAsyncState<DataFormat, IdFormat>(
 	initial: DataFormat,
@@ -12,30 +12,32 @@ export function useAsyncState<DataFormat, IdFormat>(
 	let [currentData, setCurrentData] = useState(initial);
 	let [currentError, setCurrentError] = useState(null);
 
-	if (isFetching) {
-		if (id !== currentId) {
-			setIsInvalidated(true);
-			setCurrentId(id);
-		}
-	} else if (isInvalidated || id !== currentId) {
-		setIsFetching(true);
-		setIsInvalidated(false);
-		setCurrentId(id);
-		fetchDataFrom(id).then(
-			newdata => {
-				console.log("fetched new data for: ", id, newdata);
-				batch(() => {
-					setCurrentData(newdata);
-					setCurrentError(null);
-					setIsFetching(false);
-				});
-			},
-			error => {
-				setCurrentError(error);
-				setIsFetching(false);
+	useEffect(() => {
+		if (isFetching) {
+			if (id !== currentId) {
+				setIsInvalidated(true);
+				setCurrentId(id);
 			}
-		);
-	}
+		} else if (isInvalidated || id !== currentId) {
+			setIsFetching(true);
+			setIsInvalidated(false);
+			setCurrentId(id);
+			fetchDataFrom(id).then(
+				newdata => {
+					console.log("fetched new data for: ", id, newdata);
+					batch(() => {
+						setCurrentData(newdata);
+						setCurrentError(null);
+						setIsFetching(false);
+					});
+				},
+				error => {
+					setCurrentError(error);
+					setIsFetching(false);
+				}
+			);
+		}
+	});
 
 	return {
 		data: currentData,

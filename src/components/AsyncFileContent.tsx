@@ -132,6 +132,14 @@ export default function AsyncFileContent(props: {
 		return () => window.clearInterval(handle);
 	}, [autosave, selectedFileId, hasLocalChanges, saveFile]);
 
+	useEffect(() => {
+		const cb = () => {
+			remote.doInvalidate();
+		};
+		window.addEventListener('focus', cb);
+		return () => window.removeEventListener('focus', cb);
+	}, [ remote.doInvalidate ]);
+
 	return (
 		<FileContent>
 			{hasRemoteData ? (

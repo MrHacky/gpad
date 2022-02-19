@@ -19,6 +19,7 @@
     "awesome-typescript-loader": "*",
     "copy-webpack-plugin": "*",
     "gh-pages": "*",
+    "git-revision-webpack-plugin": "^5.0.0",
     "persistence-hooks": "*",
     "react": "*",
     "react-dom": "*",

@@ -2,8 +2,11 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 //const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { GitRevisionPlugin } = require('git-revision-webpack-plugin');
 
 const webpack = require('webpack');
+
+const gitRevisionPlugin = new GitRevisionPlugin()
 
 module.exports = {
 	mode: 'production',
@@ -28,15 +31,13 @@ module.exports = {
 		]
 	},
 	plugins: [
+		new webpack.DefinePlugin({
+			COMMITHASH: webpack.DefinePlugin.runtimeValue(() => JSON.stringify(gitRevisionPlugin.commithash())),
+		}),
 		//new CleanWebpackPlugin(['dist']),
 		new CopyWebpackPlugin({ patterns: [{ from: 'public', to: '.' }] }),
 		/*
 		new webpack.NamedModulesPlugin(),
-		new webpack.DefinePlugin({
-			'process.env': {
-				'NODE_ENV': '"production"',
-			},
-		}),
 		new webpack.optimize.ModuleConcatenationPlugin(),
 		new UglifyJsPlugin(),
 		*/

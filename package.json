@@ -13,23 +13,24 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@types/react": "16.8.2",
-    "@types/react-dom": "16.8.0",
-    "@types/styled-components": "4.1.8",
-    "awesome-typescript-loader": "5.2.1",
-    "clean-webpack-plugin": "1.0.1",
-    "copy-webpack-plugin": "^5.0.0",
-    "gh-pages": "2.0.1",
-    "html-webpack-plugin": "3.2.0",
-    "persistence-hooks": "1.0.2",
-    "react": "16.8.1",
-    "react-dom": "16.8.1",
-    "source-map-loader": "0.2.4",
-    "styled-components": "4.1.3",
-    "typescript": "3.3.3",
-    "uglifyjs-webpack-plugin": "^1.1.2",
-    "webpack": "4.29.3",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0"
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "@types/styled-components": "*",
+    "awesome-typescript-loader": "*",
+    "copy-webpack-plugin": "*",
+    "gh-pages": "*",
+    "persistence-hooks": "*",
+    "react": "*",
+    "react-dom": "*",
+    "source-map-loader": "*",
+    "styled-components": "*",
+    "webpack": ">=5.0.0",
+    "webpack-cli": "*",
+    "webpack-dev-server": "*"
+  },
+  "devDependencies": {
+    "@types/react-dom": "*",
+    "html-webpack-plugin": "^5.5.0",
+    "typescript": "*"
   }
 }

@@ -1,7 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+//const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const webpack = require('webpack');
@@ -12,7 +11,7 @@ module.exports = {
 		'./src/index.tsx'
 	],
 	devServer: {
-		contentBase: './dist',
+		static: './dist',
 		port: 8000
 	},
 	resolve: {
@@ -23,14 +22,14 @@ module.exports = {
 	module: {
 		rules: [
 			// All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
-			{ test: /\.tsx?$/, loaders: ["awesome-typescript-loader"] },
+			{ test: /\.tsx?$/, loader: "awesome-typescript-loader" },
 			// All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
 			{ enforce: "pre", test: /\.js$/, loader: "source-map-loader" }
 		]
 	},
 	plugins: [
-		new CleanWebpackPlugin(['dist']),
-		new CopyWebpackPlugin([{ from: 'public', to: '.' }]),
+		//new CleanWebpackPlugin(['dist']),
+		new CopyWebpackPlugin({ patterns: [{ from: 'public', to: '.' }] }),
 		/*
 		new webpack.NamedModulesPlugin(),
 		new webpack.DefinePlugin({

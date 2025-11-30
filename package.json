@@ -25,7 +25,7 @@
     "react-dom": "*",
     "source-map-loader": "*",
     "styled-components": "*",
-    "webpack": ">=5.0.0",
+    "webpack": ">=5.103.0",
     "webpack-cli": "*",
     "webpack-dev-server": "*"
   },
